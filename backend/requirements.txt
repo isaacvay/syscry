@@ -1,0 +1,32 @@
+fastapi
+uvicorn[standard]
+requests
+pandas
+ta
+xgboost
+scikit-learn
+python-telegram-bot
+pydantic-settings
+sqlalchemy
+python-dotenv
+joblib
+slowapi
+pytest
+pytest-asyncio
+httpx
+prometheus-fastapi-instrumentator
+websockets
+
+# Hyperparameter Tuning
+optuna
+
+# Ensemble Models
+lightgbm
+catboost
+
+# Sentiment Analysis
+tweepy
+praw
+newsapi-python
+textblob
+vaderSentiment
