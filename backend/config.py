@@ -8,8 +8,8 @@ class Settings(BaseSettings):
     binance_secret_key: str = ""
     
     # Telegram Configuration
-    telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "")
+    telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "8182517592:AAES9VxhR5UDjqq2kwfjILH7IH6WN8yLIPw")
+    telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "7686161669")
     
     # Trading Configuration
     default_cryptos: List[str] = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"]
@@ -32,11 +32,11 @@ class Settings(BaseSettings):
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
     
     # Sentiment Analysis API Keys (Optional)
-    twitter_bearer_token: str = os.getenv("TWITTER_BEARER_TOKEN", "")
+    twitter_bearer_token: str = os.getenv("TWITTER_BEARER_TOKEN", "AAAAAAAAAAAAAAAAAAAAAFyU5gEAAAAAqJDLfFYu1KCutNJP0iVXM9WBTDI%3D6E9WgF85PAM5VInPRMno2W0srTKdCD8vxQHEPteDvRBuDByCmM")
     reddit_client_id: str = os.getenv("REDDIT_CLIENT_ID", "")
     reddit_client_secret: str = os.getenv("REDDIT_CLIENT_SECRET", "")
     reddit_user_agent: str = os.getenv("REDDIT_USER_AGENT", "CryptoSentimentBot/1.0")
-    news_api_key: str = os.getenv("NEWS_API_KEY", "")
+    news_api_key: str = os.getenv("NEWS_API_KEY", "8e8efbc0977f4447963b323cd544e6e3")
     
     # Sentiment Configuration
     sentiment_enabled: bool = True
