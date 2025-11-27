@@ -102,7 +102,7 @@ def select_features(df: pd.DataFrame) -> list:
     """
     # Exclude non-feature columns
     exclude_cols = ['timestamp', 'open', 'high', 'low', 'close', 'volume', 
-                    'bb_high', 'bb_low']
+                    'bb_high', 'bb_low', 'target']
     
     feature_cols = [col for col in df.columns if col not in exclude_cols]
     

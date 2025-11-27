@@ -33,9 +33,10 @@ class Settings(BaseSettings):
     
     # Sentiment Analysis API Keys (Optional)
     twitter_bearer_token: str = os.getenv("TWITTER_BEARER_TOKEN", "AAAAAAAAAAAAAAAAAAAAAFyU5gEAAAAAqJDLfFYu1KCutNJP0iVXM9WBTDI%3D6E9WgF85PAM5VInPRMno2W0srTKdCD8vxQHEPteDvRBuDByCmM")
-    reddit_client_id: str = os.getenv("REDDIT_CLIENT_ID", "")
-    reddit_client_secret: str = os.getenv("REDDIT_CLIENT_SECRET", "")
-    reddit_user_agent: str = os.getenv("REDDIT_USER_AGENT", "CryptoSentimentBot/1.0")
+    # Reddit API disabled - no access
+    reddit_client_id: str = ""
+    reddit_client_secret: str = ""
+    reddit_user_agent: str = ""
     news_api_key: str = os.getenv("NEWS_API_KEY", "8e8efbc0977f4447963b323cd544e6e3")
     
     # Sentiment Configuration

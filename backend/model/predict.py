@@ -26,7 +26,8 @@ def load_model(symbol="BTCUSDT", interval="1h", use_ensemble=True):
     if cache_key in _model_cache:
         return _model_cache[cache_key]
     
-    model_dir = Path(__file__).parent / 'ml' / 'models'
+    # Model directory is at backend/ml/models (parent of model directory)
+    model_dir = Path(__file__).parent.parent / 'ml' / 'models'
     
     # Try to load ensemble first if requested
     if use_ensemble:

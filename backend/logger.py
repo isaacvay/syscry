@@ -11,9 +11,11 @@ log_dir.mkdir(exist_ok=True)
 logger = logging.getLogger("crypto_ai")
 logger.setLevel(logging.INFO)
 
-# Console handler
+# Console handler with UTF-8 encoding for emoji support
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
+# Set UTF-8 encoding to support emojis on Windows
+console_handler.stream.reconfigure(encoding='utf-8')
 console_formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'

@@ -31,6 +31,24 @@ def generate_signal_service(symbol, timeframe):
     df["stoch_k"] = stoch.stoch()
     df["stoch_d"] = stoch.stoch_signal()
     df["adx"] = ta.trend.adx(df["high"], df["low"], df["close"], window=14)
+    
+    # Add sentiment features if enabled
+    if settings.sentiment_enabled:
+        try:
+            from ml.sentiment_features import add_sentiment_features, get_crypto_name
+            crypto_name = get_crypto_name(clean_symbol)
+            df = add_sentiment_features(df, clean_symbol, crypto_name=crypto_name)
+        except Exception as e:
+            logger.warning(f"Could not add sentiment features: {e}")
+            # Add default sentiment features to match training
+            df['sentiment_score'] = 0.0
+            df['sentiment_source_count'] = 0
+            df['twitter_sentiment'] = 0.0
+            df['twitter_positive_ratio'] = 0.5
+            df['reddit_sentiment'] = 0.0
+            df['reddit_positive_ratio'] = 0.5
+            df['news_sentiment'] = 0.0
+            df['news_positive_ratio'] = 0.5
 
     last = df.iloc[-1]
 

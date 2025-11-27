@@ -1,0 +1,4 @@
+2025-11-26 18:05:20 - crypto_ai - INFO - start_alerts:43 - Cryptos: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT
+2025-11-26 18:05:20 - crypto_ai - INFO - start_alerts:44 - Intervalle: 5 minutes
+2025-11-26 18:22:44 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BTCUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-11-27 16:39:59 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for ETHUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))

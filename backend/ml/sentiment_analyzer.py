@@ -80,18 +80,10 @@ class SentimentAnalyzer:
             except Exception as e:
                 print(f"⚠️ Twitter API initialization failed: {e}")
         
-        # Initialize Reddit client
+        # Initialize Reddit client (DISABLED - no API access)
         self.reddit_client = None
-        if REDDIT_AVAILABLE and all([reddit_client_id, reddit_client_secret, reddit_user_agent]):
-            try:
-                self.reddit_client = praw.Reddit(
-                    client_id=reddit_client_id,
-                    client_secret=reddit_client_secret,
-                    user_agent=reddit_user_agent
-                )
-                print("✅ Reddit API initialized")
-            except Exception as e:
-                print(f"⚠️ Reddit API initialization failed: {e}")
+        # Reddit API disabled by user request
+        print("ℹ️ Reddit API disabled (no API access)")
         
         # Initialize News API client
         self.news_client = None
