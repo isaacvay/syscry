@@ -1,0 +1,36 @@
+# Auto-labeling configuration for PRs
+# Automatically adds labels based on changed files
+
+frontend:
+  - app/**/*
+  - '*.tsx'
+  - '*.ts'
+  - '*.css'
+
+backend:
+  - backend/**/*
+  - '*.py'
+
+tests:
+  - '**/__tests__/**/*'
+  - '**/*.test.*'
+  - '**/*.spec.*'
+
+documentation:
+  - '*.md'
+  - docs/**/*
+
+dependencies:
+  - package.json
+  - pnpm-lock.yaml
+  - requirements.txt
+
+security:
+  - backend/config.py
+  - '**/.env*'
+  - '**/auth/**/*'
+
+performance:
+  - '**/cache*'
+  - '**/optimization*'
+  - '**/performance*'

@@ -22,6 +22,7 @@ export const CryptoChart: React.FC<ChartProps> = ({ data, onRefresh, timeframe, 
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const [zoomLevel, setZoomLevel] = useState(2.0);
   const [panOffset, setPanOffset] = useState(0);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -196,7 +197,7 @@ export const CryptoChart: React.FC<ChartProps> = ({ data, onRefresh, timeframe, 
   };
   const rsiYScale = (value: number) => (100 - value) / 100 * (rsiHeight - 20);
 
-  // Mouse move handler
+  // Mouse move handler - improved detection
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
@@ -205,10 +206,37 @@ export const CryptoChart: React.FC<ChartProps> = ({ data, onRefresh, timeframe, 
 
     if (x >= 0 && x <= chartWidth && y >= 0 && y <= chartHeight) {
       setMousePos({ x, y });
-      const index = Math.round((x / chartWidth) * (filteredData.length - 1));
-      setHoveredIndex(Math.max(0, Math.min(index, filteredData.length - 1)));
+
+      // Store absolute position for tooltip
+      setTooltipPosition({
+        x: e.clientX,
+        y: e.clientY
+      });
+
+      // Find the nearest candle based on x position
+      let nearestIndex = 0;
+      let minDistance = Infinity;
+
+      for (let i = 0; i < visibleData.length; i++) {
+        const actualIndex = startIndex + i;
+        const candleX = xScale(actualIndex);
+        const distance = Math.abs(x - candleX);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestIndex = actualIndex;
+        }
+      }
+
+      // Only set hovered index if we're close enough to a candle
+      if (minDistance < CANDLE_TOTAL_WIDTH / 2) {
+        setHoveredIndex(nearestIndex);
+      } else {
+        setHoveredIndex(null);
+      }
     } else {
       setMousePos(null);
+      setTooltipPosition(null);
       setHoveredIndex(null);
     }
   };
@@ -249,14 +277,50 @@ export const CryptoChart: React.FC<ChartProps> = ({ data, onRefresh, timeframe, 
 
     const isGreen = candle.close >= candle.open;
     const color = isGreen ? '#10B981' : '#EF4444';
+    const glowColor = isGreen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)';
 
     const bodyTop = Math.min(openY, closeY);
     const bodyBottom = Math.max(openY, closeY);
     const bodyHeight = Math.max(Math.abs(bodyBottom - bodyTop), 1);
 
+    const isHovered = hoveredIndex === actualIndex;
+
     return (
       <g key={`candle-${actualIndex}`}>
-        <line x1={x} y1={highY} x2={x} y2={lowY} stroke={color} strokeWidth={Math.max(2, zoomLevel)} opacity={0.8} />
+        {/* Glow effect for hovered candle */}
+        {isHovered && (
+          <>
+            <line
+              x1={x} y1={highY} x2={x} y2={lowY}
+              stroke={glowColor}
+              strokeWidth={Math.max(6, zoomLevel * 2)}
+              opacity={0.6}
+              filter="url(#glow)"
+            />
+            <rect
+              x={x - candleWidth / 2}
+              y={bodyTop}
+              width={candleWidth}
+              height={bodyHeight}
+              fill={glowColor}
+              stroke="none"
+              rx={2}
+              opacity={0.5}
+              filter="url(#glow)"
+            />
+          </>
+        )}
+
+        {/* Main candle wick */}
+        <line
+          x1={x} y1={highY} x2={x} y2={lowY}
+          stroke={color}
+          strokeWidth={Math.max(2, zoomLevel)}
+          opacity={isHovered ? 1 : 0.9}
+          strokeLinecap="round"
+        />
+
+        {/* Candle body */}
         <rect
           x={x - candleWidth / 2}
           y={bodyTop}
@@ -265,8 +329,12 @@ export const CryptoChart: React.FC<ChartProps> = ({ data, onRefresh, timeframe, 
           fill={color}
           stroke={color}
           strokeWidth={1}
-          rx={1}
-          opacity={hoveredIndex === actualIndex ? 1 : 0.9}
+          rx={2}
+          opacity={isHovered ? 1 : 0.95}
+          style={{
+            filter: isHovered ? `drop-shadow(0 0 8px ${glowColor})` : 'none',
+            transition: 'all 0.2s ease'
+          }}
         />
       </g>
     );
@@ -314,12 +382,24 @@ export const CryptoChart: React.FC<ChartProps> = ({ data, onRefresh, timeframe, 
   };
 
   // Render MA
-  const renderMA = (maData: (number | null)[], color: string, width: number) => {
+  const renderMA = (maData: (number | null)[], color: string, width: number, strokeDasharray?: string) => {
     const points = maData
       .map((value, i) => value !== null ? `${xScale(i)},${yScale(value)}` : null)
       .filter(p => p !== null)
       .join(' ');
-    return <polyline points={points} fill="none" stroke={color} strokeWidth={width} opacity={0.7} />;
+    return (
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth={width}
+        opacity={0.85}
+        strokeDasharray={strokeDasharray}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        filter="url(#glow)"
+      />
+    );
   };
 
   // Render RSI
@@ -398,179 +478,344 @@ export const CryptoChart: React.FC<ChartProps> = ({ data, onRefresh, timeframe, 
   const hoveredRSI = hoveredIndex !== null && rsiData[hoveredIndex] !== null && rsiData[hoveredIndex] !== undefined ? rsiData[hoveredIndex] : null;
 
   return (
-    <div className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700 p-6 shadow-2xl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-6 h-6 text-blue-400" />
-            <h3 className="text-xl font-bold text-white">Analyse Technique</h3>
-            <div className="flex items-center gap-2 px-2 py-1 bg-green-900/30 rounded-lg">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-green-400">Live</span>
+    <>
+      {/* Floating Tooltip - follows cursor (outside main container) */}
+      {hoveredCandle && tooltipPosition && (
+        <div
+          className="fixed pointer-events-none transition-all duration-100 ease-out"
+          style={{
+            left: `${tooltipPosition.x + 20}px`,
+            top: `${tooltipPosition.y - 80}px`,
+            transform: tooltipPosition.x > window.innerWidth - 400 ? 'translateX(-100%) translateX(-40px)' : 'none',
+            zIndex: 9999
+          }}
+        >
+          <div className="bg-gradient-to-br from-gray-900/98 via-gray-800/98 to-gray-900/98 border-2 border-gray-700/80 rounded-2xl backdrop-blur-xl shadow-2xl p-4 min-w-[320px]">
+            {/* Header with symbol and time */}
+            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-700/50">
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${hoveredCandle.close >= hoveredCandle.open ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-red-500 shadow-lg shadow-red-500/50'}`}></div>
+                <span className="text-white font-bold text-sm">
+                  {new Date(hoveredCandle.time * 1000).toLocaleString('fr-FR', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-3xl font-bold text-white">${currentPrice.toFixed(2)}</span>
-            <div className={`flex items-center gap-1 px-3 py-1 rounded-lg ${priceChange >= 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-              {priceChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-              <span className="font-bold">{priceChange >= 0 ? '+' : ''}{priceChangePercent}%</span>
+
+            {/* OHLC Data */}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="flex justify-between items-center px-2 py-1.5 bg-gray-800/40 rounded-lg">
+                <span className="text-gray-400 text-xs font-medium">Open</span>
+                <span className="text-white font-mono font-bold text-sm">${hoveredCandle.open.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center px-2 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <span className="text-gray-400 text-xs font-medium">High</span>
+                <span className="text-green-400 font-mono font-bold text-sm drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">${hoveredCandle.high.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center px-2 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <span className="text-gray-400 text-xs font-medium">Low</span>
+                <span className="text-red-400 font-mono font-bold text-sm drop-shadow-[0_0_8px_rgba(248,113,113,0.4)]">${hoveredCandle.low.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center px-2 py-1.5 bg-gray-800/40 rounded-lg">
+                <span className="text-gray-400 text-xs font-medium">Close</span>
+                <span className="text-white font-mono font-black text-sm">${hoveredCandle.close.toFixed(2)}</span>
+              </div>
             </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')}
-          </p>
-        </div>
 
-        {/* Controls */}
-        <div className="flex flex-wrap gap-2">
-          {/* Chart Type */}
-          <div className="flex gap-1 bg-gray-800 p-1 rounded-lg border border-gray-700">
-            <button onClick={() => setChartType('candlestick')} className={`p-2 rounded transition ${chartType === 'candlestick' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`} title="Bougies">
-              <CandlestickChart className="w-4 h-4" />
-            </button>
-            <button onClick={() => setChartType('line')} className={`p-2 rounded transition ${chartType === 'line' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`} title="Ligne">
-              <LineChartIcon className="w-4 h-4" />
-            </button>
-            <button onClick={() => setChartType('area')} className={`p-2 rounded transition ${chartType === 'area' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`} title="Zone">
-              <AreaChartIcon className="w-4 h-4" />
-            </button>
-          </div>
+            {/* Change percentage */}
+            <div className={`flex justify-between items-center px-3 py-2 rounded-lg border-2 ${hoveredCandle.close >= hoveredCandle.open
+              ? 'bg-green-500/10 border-green-500/30'
+              : 'bg-red-500/10 border-red-500/30'
+              }`}>
+              <span className="text-gray-300 text-xs font-semibold">Change</span>
+              <span className={`font-mono font-black text-base ${hoveredCandle.close >= hoveredCandle.open
+                ? 'text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]'
+                : 'text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.5)]'
+                }`}>
+                {hoveredCandle.close >= hoveredCandle.open ? '+' : ''}
+                {((hoveredCandle.close - hoveredCandle.open) / hoveredCandle.open * 100).toFixed(2)}%
+              </span>
+            </div>
 
-          {/* Timeframe */}
-          <div className="flex gap-1 bg-gray-800 p-1 rounded-lg border border-gray-700">
-            {(['15m', '1h', '4h', '1d', '1w'] as const).map((tf) => (
-              <button key={tf} onClick={() => onTimeframeChange(tf)} className={`px-2 py-1 rounded text-xs font-semibold transition ${timeframe === tf ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'}`}>
-                {tf.toUpperCase()}
-              </button>
-            ))}
-          </div>
+            {/* RSI if available */}
+            {hoveredRSI !== null && typeof hoveredRSI === 'number' && (
+              <div className="mt-3 flex justify-between items-center px-3 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                <span className="text-gray-300 text-xs font-semibold">RSI (14)</span>
+                <span className="text-purple-400 font-mono font-bold text-sm drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]">
+                  {hoveredRSI.toFixed(1)}
+                </span>
+              </div>
+            )}
 
-          {/* Indicators */}
-          <button onClick={() => setShowMA(!showMA)} className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${showMA ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>MA</button>
-          <button onClick={() => setShowBB(!showBB)} className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${showBB ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>BB</button>
-          <button onClick={() => setShowVolume(!showVolume)} className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${showVolume ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>VOL</button>
-          <button onClick={() => setShowRSI(!showRSI)} className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${showRSI ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>RSI</button>
-
-          {/* Zoom Controls */}
-          <div className="flex gap-1 bg-gray-800 p-1 rounded-lg border border-gray-700">
-            <button onClick={handleZoomOut} className="p-1 text-gray-400 hover:text-white transition" title="Zoom Out">
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            <button onClick={handleResetZoom} className="px-2 text-xs text-gray-400 hover:text-white transition" title="Reset Zoom">
-              {(zoomLevel * 100).toFixed(0)}%
-            </button>
-            <button onClick={handleZoomIn} className="p-1 text-gray-400 hover:text-white transition" title="Zoom In">
-              <ZoomIn className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-3 text-xs">
-        {showMA && (
-          <>
-            <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-yellow-400"></div><span className="text-gray-400">MA7</span></div>
-            <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-blue-400"></div><span className="text-gray-400">MA20</span></div>
-            <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-purple-400"></div><span className="text-gray-400">MA50</span></div>
-          </>
-        )}
-        {showBB && <div className="flex items-center gap-2"><div className="w-4 h-2 bg-blue-400 opacity-20 border border-blue-400"></div><span className="text-gray-400">BB(20,2)</span></div>}
-        {showVolume && <div className="flex items-center gap-2"><div className="w-3 h-3 bg-purple-500 opacity-40"></div><span className="text-gray-400">Volume</span></div>}
-        {showRSI && <div className="flex items-center gap-2"><div className="w-4 h-0.5 bg-purple-400"></div><span className="text-gray-400">RSI(14)</span></div>}
-        <div className="flex items-center gap-2 ml-auto">
-          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-          <span className="text-gray-400 font-semibold">{timeframeConfig.label}</span>
-          <span className="text-gray-500">•</span>
-          <span className="text-gray-400">{filteredData.length} bougies</span>
-        </div>
-      </div>
-
-      {/* Tooltip */}
-      {hoveredCandle && (
-        <div className="mb-3 p-3 bg-gray-800/95 border border-gray-700 rounded-lg backdrop-blur-sm">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-            <div><span className="text-gray-400">O:</span><span className="ml-1 text-white font-mono">${hoveredCandle.open.toFixed(2)}</span></div>
-            <div><span className="text-gray-400">H:</span><span className="ml-1 text-green-400 font-mono">${hoveredCandle.high.toFixed(2)}</span></div>
-            <div><span className="text-gray-400">L:</span><span className="ml-1 text-red-400 font-mono">${hoveredCandle.low.toFixed(2)}</span></div>
-            <div><span className="text-gray-400">C:</span><span className="ml-1 text-white font-mono font-bold">${hoveredCandle.close.toFixed(2)}</span></div>
-            <div><span className="text-gray-400">Δ:</span><span className={`ml-1 font-mono font-bold ${hoveredCandle.close >= hoveredCandle.open ? 'text-green-400' : 'text-red-400'}`}>{((hoveredCandle.close - hoveredCandle.open) / hoveredCandle.open * 100).toFixed(2)}%</span></div>
-            {hoveredRSI !== null && typeof hoveredRSI === 'number' && <div><span className="text-gray-400">RSI:</span><span className="ml-1 text-purple-400 font-mono">{hoveredRSI.toFixed(1)}</span></div>}
+            {/* Tooltip arrow */}
+            <div
+              className={`absolute w-3 h-3 bg-gray-900 border-l-2 border-b-2 border-gray-700/80 transform rotate-45 ${tooltipPosition.x > window.innerWidth - 400 ? 'right-5' : '-left-1.5'
+                }`}
+              style={{ top: '50%', marginTop: '-6px' }}
+            ></div>
           </div>
         </div>
       )}
 
-      {/* Chart */}
-      <div className="w-full overflow-x-auto bg-gray-900/50 rounded-lg p-2">
-        <svg ref={svgRef} viewBox={`0 0 ${width} ${totalHeight}`} className="w-full h-auto" onMouseMove={handleMouseMove} onMouseLeave={() => { setMousePos(null); setHoveredIndex(null); }} onWheel={handleWheel}>
-          <defs>
-            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.05" />
-            </linearGradient>
-          </defs>
-
-          <g transform={`translate(${margin.left}, ${margin.top})`}>
-            {/* Grid */}
-            {yTickValues.map((value, i) => (
-              <line key={`grid-${i}`} x1={0} y1={yScale(value)} x2={chartWidth} y2={yScale(value)} stroke="#374151" strokeWidth={0.5} opacity={0.3} />
-            ))}
-
-            {/* Crosshair */}
-            {mousePos && (
-              <>
-                <line x1={mousePos.x} y1={0} x2={mousePos.x} y2={chartHeight} stroke="#6B7280" strokeWidth={1} strokeDasharray="4 4" opacity={0.5} />
-                <line x1={0} y1={mousePos.y} x2={chartWidth} y2={mousePos.y} stroke="#6B7280" strokeWidth={1} strokeDasharray="4 4" opacity={0.5} />
-              </>
-            )}
-
-            {/* Bollinger Bands (render first, behind candles) */}
-            {renderBB()}
-
-            {/* Chart */}
-            {chartType === 'candlestick' && visibleData.map((candle, i) => renderCandle(candle, i))}
-            {chartType === 'line' && renderLine()}
-            {chartType === 'area' && renderArea()}
-
-            {/* MA */}
-            {showMA && ma7.length > 0 && renderMA(ma7, '#FBBF24', 1.5)}
-            {showMA && ma20.length > 0 && renderMA(ma20, '#3B82F6', 2)}
-            {showMA && ma50.length > 0 && renderMA(ma50, '#A855F7', 2)}
-
-            {/* Axes */}
-            {yTickValues.map((value, i) => (
-              <text key={`y-${i}`} x={chartWidth + 10} y={yScale(value)} fill="#9CA3AF" fontSize="14" fontWeight="500" dominantBaseline="middle">${value.toFixed(0)}</text>
-            ))}
-            {[0, Math.floor(filteredData.length / 2), filteredData.length - 1].map((index) => {
-              const candle = filteredData[index];
-              if (!candle) return null;
-              const time = new Date(candle.time * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-              return <text key={`x-${index}`} x={xScale(index)} y={chartHeight + 25} fill="#9CA3AF" fontSize="13" textAnchor="middle">{time}</text>;
-            })}
-
-            {/* RSI */}
-            {renderRSI()}
-
-            {/* Volume */}
-            {renderVolume()}
-          </g>
-        </svg>
-      </div>
-
-      {/* Footer Stats */}
-      <div className="mt-3 pt-3 border-t border-gray-700 flex flex-wrap justify-between items-center text-xs text-gray-400">
-        <div className="flex gap-3">
-          <span>{filteredData.length} périodes</span><span>•</span>
-          <span>Min: ${minPrice.toFixed(2)}</span><span>•</span>
-          <span>Max: ${maxPrice.toFixed(2)}</span><span>•</span>
-          <span>Range: ${priceRange.toFixed(2)}</span>
+      <div className="w-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-gray-700/50 p-6 shadow-2xl backdrop-blur-sm">
+        {/* Animated Background Glow */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
-        <div className="flex gap-2 items-center">
-          <div className="w-2 h-2 rounded-full bg-green-500"></div><span>Hausse</span>
-          <div className="w-2 h-2 rounded-full bg-red-500 ml-2"></div><span>Baisse</span>
+
+        {/* Header */}
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl border border-blue-500/30 backdrop-blur-sm">
+                <BarChart3 className="w-6 h-6 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+              </div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Analyse Technique</h3>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-900/40 to-emerald-900/40 rounded-lg border border-green-500/30 backdrop-blur-sm shadow-lg shadow-green-500/10">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
+                <span className="text-xs font-semibold text-green-400">Live</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-4xl font-black bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent drop-shadow-lg">${currentPrice.toFixed(2)}</span>
+              <div className={`flex items-center gap-1.5 px-4 py-2 rounded-xl backdrop-blur-sm border shadow-lg transition-all duration-300 ${priceChange >= 0
+                ? 'bg-gradient-to-r from-green-900/40 to-emerald-900/40 border-green-500/30 text-green-400 shadow-green-500/20'
+                : 'bg-gradient-to-r from-red-900/40 to-rose-900/40 border-red-500/30 text-red-400 shadow-red-500/20'}`}>
+                {priceChange >= 0 ? <TrendingUp className="w-5 h-5 drop-shadow-lg" /> : <TrendingDown className="w-5 h-5 drop-shadow-lg" />}
+                <span className="font-bold text-lg">{priceChange >= 0 ? '+' : ''}{priceChangePercent}%</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2 font-medium">
+              Dernière mise à jour: {lastUpdate.toLocaleTimeString('fr-FR')}
+            </p>
+          </div>
+
+          {/* Controls */}
+          <div className="relative z-10 flex flex-wrap gap-2">
+            {/* Chart Type */}
+            <div className="flex gap-1 bg-gray-800/60 backdrop-blur-md p-1.5 rounded-xl border border-gray-700/50 shadow-lg">
+              <button onClick={() => setChartType('candlestick')} className={`p-2.5 rounded-lg transition-all duration-300 ${chartType === 'candlestick' ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-700/50'}`} title="Bougies">
+                <CandlestickChart className="w-4 h-4" />
+              </button>
+              <button onClick={() => setChartType('line')} className={`p-2.5 rounded-lg transition-all duration-300 ${chartType === 'line' ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-700/50'}`} title="Ligne">
+                <LineChartIcon className="w-4 h-4" />
+              </button>
+              <button onClick={() => setChartType('area')} className={`p-2.5 rounded-lg transition-all duration-300 ${chartType === 'area' ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-700/50'}`} title="Zone">
+                <AreaChartIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Timeframe */}
+            <div className="flex gap-1 bg-gray-800/60 backdrop-blur-md p-1.5 rounded-xl border border-gray-700/50 shadow-lg">
+              {(['15m', '1h', '4h', '1d', '1w'] as const).map((tf) => (
+                <button key={tf} onClick={() => onTimeframeChange(tf)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${timeframe === tf ? 'bg-gradient-to-br from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/30' : 'text-gray-400 hover:text-white hover:bg-gray-700/50'}`}>
+                  {tf.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {/* Indicators */}
+            <button onClick={() => setShowMA(!showMA)} className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 backdrop-blur-md border shadow-lg ${showMA ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white border-blue-500/30 shadow-blue-500/30' : 'bg-gray-800/60 text-gray-400 hover:text-white border-gray-700/50 hover:border-gray-600'}`}>MA</button>
+            <button onClick={() => setShowBB(!showBB)} className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 backdrop-blur-md border shadow-lg ${showBB ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white border-blue-500/30 shadow-blue-500/30' : 'bg-gray-800/60 text-gray-400 hover:text-white border-gray-700/50 hover:border-gray-600'}`}>BB</button>
+            <button onClick={() => setShowVolume(!showVolume)} className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 backdrop-blur-md border shadow-lg ${showVolume ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white border-purple-500/30 shadow-purple-500/30' : 'bg-gray-800/60 text-gray-400 hover:text-white border-gray-700/50 hover:border-gray-600'}`}>VOL</button>
+            <button onClick={() => setShowRSI(!showRSI)} className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 backdrop-blur-md border shadow-lg ${showRSI ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white border-purple-500/30 shadow-purple-500/30' : 'bg-gray-800/60 text-gray-400 hover:text-white border-gray-700/50 hover:border-gray-600'}`}>RSI</button>
+
+            {/* Zoom Controls */}
+            <div className="flex gap-1 bg-gray-800/60 backdrop-blur-md p-1.5 rounded-xl border border-gray-700/50 shadow-lg">
+              <button onClick={handleZoomOut} className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-300 rounded-lg" title="Zoom Out">
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <button onClick={handleResetZoom} className="px-3 text-xs font-bold text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-300 rounded-lg" title="Reset Zoom">
+                {(zoomLevel * 100).toFixed(0)}%
+              </button>
+              <button onClick={handleZoomIn} className="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-300 rounded-lg" title="Zoom In">
+                <ZoomIn className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="relative z-10 flex flex-wrap gap-4 mb-4 text-xs">
+          {showMA && (
+            <>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg backdrop-blur-sm">
+                <div className="w-5 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 shadow-lg shadow-yellow-500/30"></div>
+                <span className="text-yellow-400 font-semibold">MA7</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
+                <div className="w-5 h-0.5 bg-gradient-to-r from-blue-400 to-blue-500 shadow-lg shadow-blue-500/30"></div>
+                <span className="text-blue-400 font-semibold">MA20</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg backdrop-blur-sm">
+                <div className="w-5 h-0.5 bg-gradient-to-r from-purple-400 to-purple-500 shadow-lg shadow-purple-500/30"></div>
+                <span className="text-purple-400 font-semibold">MA50</span>
+              </div>
+            </>
+          )}
+          {showBB && <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm"><div className="w-4 h-3 bg-blue-400/20 border border-blue-400/40 rounded"></div><span className="text-blue-400 font-semibold">BB(20,2)</span></div>}
+          {showVolume && <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg backdrop-blur-sm"><div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 opacity-50 rounded"></div><span className="text-purple-400 font-semibold">Volume</span></div>}
+          {showRSI && <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg backdrop-blur-sm"><div className="w-5 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 shadow-lg shadow-purple-500/30"></div><span className="text-purple-400 font-semibold">RSI(14)</span></div>}
+          <div className="flex items-center gap-3 ml-auto px-4 py-1.5 bg-gray-800/60 border border-gray-700/50 rounded-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50 animate-pulse"></div>
+              <span className="text-gray-300 font-bold">{timeframeConfig.label}</span>
+            </div>
+            <span className="text-gray-600">•</span>
+            <span className="text-gray-400 font-medium">{filteredData.length} bougies</span>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="relative z-10 w-full overflow-x-auto bg-gray-900/50 rounded-xl p-3 border border-gray-800/50 backdrop-blur-sm">
+          <svg ref={svgRef} viewBox={`0 0 ${width} ${totalHeight}`} className="w-full h-auto" onMouseMove={handleMouseMove} onMouseLeave={() => { setMousePos(null); setHoveredIndex(null); }} onWheel={handleWheel}>
+            <defs>
+              {/* Area gradient */}
+              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#8B5CF6" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.05" />
+              </linearGradient>
+
+              {/* Glow filter */}
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Grid gradient */}
+              <linearGradient id="gridGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#374151" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#374151" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+
+            <g transform={`translate(${margin.left}, ${margin.top})`}>
+              {/* Grid */}
+              {yTickValues.map((value, i) => (
+                <line
+                  key={`grid-${i}`}
+                  x1={0}
+                  y1={yScale(value)}
+                  x2={chartWidth}
+                  y2={yScale(value)}
+                  stroke="url(#gridGradient)"
+                  strokeWidth={0.5}
+                  opacity={0.4}
+                  strokeDasharray={i === Math.floor(yTickValues.length / 2) ? "none" : "2 4"}
+                />
+              ))}
+
+              {/* Crosshair */}
+              {mousePos && (
+                <>
+                  <line
+                    x1={mousePos.x}
+                    y1={0}
+                    x2={mousePos.x}
+                    y2={chartHeight}
+                    stroke="#60A5FA"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 4"
+                    opacity={0.6}
+                    filter="url(#glow)"
+                  />
+                  <line
+                    x1={0}
+                    y1={mousePos.y}
+                    x2={chartWidth}
+                    y2={mousePos.y}
+                    stroke="#60A5FA"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 4"
+                    opacity={0.6}
+                    filter="url(#glow)"
+                  />
+                  {/* Crosshair center point */}
+                  <circle
+                    cx={mousePos.x}
+                    cy={mousePos.y}
+                    r={4}
+                    fill="#60A5FA"
+                    opacity={0.8}
+                    filter="url(#glow)"
+                  />
+                </>
+              )}
+
+              {/* Bollinger Bands (render first, behind candles) */}
+              {renderBB()}
+
+              {/* Chart */}
+              {chartType === 'candlestick' && visibleData.map((candle, i) => renderCandle(candle, i))}
+              {chartType === 'line' && renderLine()}
+              {chartType === 'area' && renderArea()}
+
+              {/* MA */}
+              {showMA && ma7.length > 0 && renderMA(ma7, '#FBBF24', 1.5)}
+              {showMA && ma20.length > 0 && renderMA(ma20, '#3B82F6', 2)}
+              {showMA && ma50.length > 0 && renderMA(ma50, '#A855F7', 2)}
+
+              {/* Axes */}
+              {yTickValues.map((value, i) => (
+                <text key={`y-${i}`} x={chartWidth + 10} y={yScale(value)} fill="#9CA3AF" fontSize="14" fontWeight="500" dominantBaseline="middle">${value.toFixed(0)}</text>
+              ))}
+              {[0, Math.floor(filteredData.length / 2), filteredData.length - 1].map((index) => {
+                const candle = filteredData[index];
+                if (!candle) return null;
+                const time = new Date(candle.time * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                return <text key={`x-${index}`} x={xScale(index)} y={chartHeight + 25} fill="#9CA3AF" fontSize="13" textAnchor="middle">{time}</text>;
+              })}
+
+              {/* RSI */}
+              {renderRSI()}
+
+              {/* Volume */}
+              {renderVolume()}
+            </g>
+          </svg>
+        </div>
+
+        {/* Footer Stats */}
+        <div className="relative z-10 mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap justify-between items-center text-xs">
+          <div className="flex gap-4 flex-wrap">
+            <div className="px-3 py-1.5 bg-gray-800/40 border border-gray-700/30 rounded-lg backdrop-blur-sm">
+              <span className="text-gray-500 mr-2">Périodes:</span>
+              <span className="text-cyan-400 font-bold">{filteredData.length}</span>
+            </div>
+            <div className="px-3 py-1.5 bg-gray-800/40 border border-gray-700/30 rounded-lg backdrop-blur-sm">
+              <span className="text-gray-500 mr-2">Min:</span>
+              <span className="text-red-400 font-mono font-bold">${minPrice.toFixed(2)}</span>
+            </div>
+            <div className="px-3 py-1.5 bg-gray-800/40 border border-gray-700/30 rounded-lg backdrop-blur-sm">
+              <span className="text-gray-500 mr-2">Max:</span>
+              <span className="text-green-400 font-mono font-bold">${maxPrice.toFixed(2)}</span>
+            </div>
+            <div className="px-3 py-1.5 bg-gray-800/40 border border-gray-700/30 rounded-lg backdrop-blur-sm">
+              <span className="text-gray-500 mr-2">Range:</span>
+              <span className="text-blue-400 font-mono font-bold">${priceRange.toFixed(2)}</span>
+            </div>
+          </div>
+          <div className="flex gap-4 items-center mt-2 md:mt-0">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg backdrop-blur-sm">
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></div>
+              <span className="text-green-400 font-semibold">Hausse</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg backdrop-blur-sm">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-lg shadow-red-500/50"></div>
+              <span className="text-red-400 font-semibold">Baisse</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

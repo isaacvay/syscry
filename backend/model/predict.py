@@ -95,12 +95,16 @@ def predict_direction(df: pd.DataFrame, symbol="BTCUSDT", interval="1h",
                 # Prepare features
                 df_features = create_features(df.copy())
                 feature_names = model_data['feature_names']
-                X = df_features[feature_names].iloc[[-1]]
                 
-                # Handle missing features
+                # Filter out target if present
+                feature_names = [f for f in feature_names if f != 'target']
+                
+                # Handle missing features BEFORE selection
                 for col in feature_names:
-                    if col not in X.columns:
-                        X[col] = 0
+                    if col not in df_features.columns:
+                        df_features[col] = 0
+                        
+                X = df_features[feature_names].iloc[[-1]]
                 
                 # Predict with ensemble
                 result = predict_with_ensemble(model_data, X)
@@ -111,13 +115,16 @@ def predict_direction(df: pd.DataFrame, symbol="BTCUSDT", interval="1h",
                 df_features = create_features(df.copy())
                 feature_names = model_data['feature_names']
                 
+                # Filter out target if present
+                feature_names = [f for f in feature_names if f != 'target']
+                
+                # Handle missing features BEFORE selection
+                for col in feature_names:
+                    if col not in df_features.columns:
+                        df_features[col] = 0
+                
                 # Get last row features
                 X = df_features[feature_names].iloc[[-1]]
-                
-                # Handle any missing features
-                for col in feature_names:
-                    if col not in X.columns:
-                        X[col] = 0
                 
                 # Predict probability
                 model = model_data['model']
@@ -126,25 +133,90 @@ def predict_direction(df: pd.DataFrame, symbol="BTCUSDT", interval="1h",
             return float(prob)
             
         except Exception as e:
-            print(f"⚠️ ML prediction error: {e}, fallback to heuristic")
+            from logger import logger
+            logger.warning(f"⚠️ ML prediction error for {symbol} {interval}: {e}")
+            logger.debug(f"Traceback:", exc_info=True)
+            logger.warning(f"Falling back to heuristic prediction for {symbol}")
             # Fall through to heuristic
     
-    # Fallback: Simple heuristic (same as before)
-    base_prob = 0.5
+    # If no model found, log warning
+    if model_data is None:
+        from logger import logger
+        logger.warning(f"No ML model found for {symbol} {interval}, using heuristic prediction")
     
+    # ========== ENHANCED FALLBACK HEURISTIC ==========
+    # Use multiple technical indicators for better fallback predictions
+    
+    signals = []
+    weights = []
+    
+    # Signal 1: EMA Trend (weight: 0.3)
     if 'ema20' in df.columns:
         last_close = df['close'].iloc[-1]
         last_ema = df['ema20'].iloc[-1]
         
         if last_close > last_ema:
-            base_prob += 0.1  # Trend is up
+            signals.append(0.6)  # Bullish
+            weights.append(0.3)
         else:
-            base_prob -= 0.1  # Trend is down
+            signals.append(0.4)  # Bearish
+            weights.append(0.3)
     
-    # Add some noise to simulate variation
+    # Signal 2: RSI (weight: 0.25)
+    if 'rsi' in df.columns:
+        last_rsi = df['rsi'].iloc[-1]
+        
+        if last_rsi < 30:
+            signals.append(0.65)  # Oversold - likely to go up
+            weights.append(0.25)
+        elif last_rsi > 70:
+            signals.append(0.35)  # Overbought - likely to go down
+            weights.append(0.25)
+        else:
+            signals.append(0.5)  # Neutral
+            weights.append(0.25)
+    
+    # Signal 3: MACD (weight: 0.25)
+    if 'macd' in df.columns:
+        last_macd = df['macd'].iloc[-1]
+        
+        if last_macd > 0:
+            signals.append(0.6)  # Bullish
+            weights.append(0.25)
+        else:
+            signals.append(0.4)  # Bearish
+            weights.append(0.25)
+    
+    # Signal 4: Volume Trend (weight: 0.2)
+    if 'volume' in df.columns and len(df) > 20:
+        recent_volume = df['volume'].iloc[-5:].mean()
+        avg_volume = df['volume'].iloc[-20:].mean()
+        
+        if recent_volume > avg_volume * 1.2:
+            # High volume - strengthen trend
+            if len(signals) > 0:
+                last_signal = signals[-1]
+                if last_signal > 0.5:
+                    signals.append(0.6)
+                else:
+                    signals.append(0.4)
+            else:
+                signals.append(0.5)
+            weights.append(0.2)
+        else:
+            signals.append(0.5)  # Neutral
+            weights.append(0.2)
+    
+    # Calculate weighted average
+    if signals and weights:
+        prob = np.average(signals, weights=weights)
+    else:
+        prob = 0.5  # Default neutral
+    
+    # Add small random noise for variation
     import random
-    noise = random.uniform(-0.05, 0.05)
-    prob = base_prob + noise
+    noise = random.uniform(-0.03, 0.03)
+    prob = prob + noise
     
     # Clamp between 0 and 1
     return max(0.0, min(1.0, prob))

@@ -1,43 +1,8 @@
-import logging
-import sys
-from pathlib import Path
-from logging.handlers import RotatingFileHandler
+"""
+Unified logging module - imports from logger_enhanced
+This file exists for backward compatibility
+"""
+from logger_enhanced import logger, setup_logger, log_with_context, debug, info, warning, error, critical
 
-# Create logs directory
-log_dir = Path(__file__).parent / "logs"
-log_dir.mkdir(exist_ok=True)
+__all__ = ['logger', 'setup_logger', 'log_with_context', 'debug', 'info', 'warning', 'error', 'critical']
 
-# Configure logger
-logger = logging.getLogger("crypto_ai")
-logger.setLevel(logging.INFO)
-
-# Console handler with UTF-8 encoding for emoji support
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
-# Set UTF-8 encoding to support emojis on Windows
-console_handler.stream.reconfigure(encoding='utf-8')
-console_formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-console_handler.setFormatter(console_formatter)
-
-# File handler with rotation
-file_handler = RotatingFileHandler(
-    log_dir / "app.log",
-    maxBytes=10485760,  # 10MB
-    backupCount=5
-)
-file_handler.setLevel(logging.INFO)
-file_formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-file_handler.setFormatter(file_formatter)
-
-# Add handlers
-logger.addHandler(console_handler)
-logger.addHandler(file_handler)
-
-# Prevent propagation to root logger
-logger.propagate = False

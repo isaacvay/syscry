@@ -1,26 +1,32 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Import custom design system variables */
+@import "./design-system.css";
+
+/* Tailwind Base Layer Customizations */
+@layer base {
+    body {
+        font-family: var(--font-sans);
+    }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Tailwind Components Layer */
+@layer components {
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+    /* Gradient text utility */
+    .gradient-text {
+        background: linear-gradient(135deg, hsl(190, 80%, 50%) 0%, hsl(270, 80%, 60%) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    /* Glass morphism effect */
+    .glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+    }
 }

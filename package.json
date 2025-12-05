@@ -6,9 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "format": "prettier --write \"app/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx,js,jsx,json,css}\""
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.11",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.23.24",
     "lightweight-charts": "^5.0.9",
     "lucide-react": "^0.554.0",
@@ -16,15 +23,25 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hot-toast": "^2.6.0",
-    "recharts": "^3.4.1"
+    "react-use-websocket": "^4.13.0",
+    "recharts": "^3.4.1",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@swc/jest": "^0.2.36",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/jest": "^29.5.11",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^3.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -1,0 +1,368 @@
+/* ============================================
+   CRYPTO AI SYSTEM - DESIGN SYSTEM
+   Premium Design Tokens & Variables
+   ============================================ */
+
+
+
+/* ============================================
+   COLOR PALETTE - Premium Vibrant Colors
+   ============================================ */
+
+:root {
+  /* Primary Colors - Vibrant Gradients */
+  --color-primary-50: hsl(190, 100%, 95%);
+  --color-primary-100: hsl(190, 100%, 90%);
+  --color-primary-200: hsl(190, 95%, 80%);
+  --color-primary-300: hsl(190, 90%, 70%);
+  --color-primary-400: hsl(190, 85%, 60%);
+  --color-primary-500: hsl(190, 80%, 50%);
+  --color-primary-600: hsl(190, 75%, 40%);
+  --color-primary-700: hsl(190, 70%, 30%);
+  --color-primary-800: hsl(190, 65%, 20%);
+  --color-primary-900: hsl(190, 60%, 10%);
+
+  /* Accent Colors - Violet to Pink */
+  --color-accent-violet: hsl(270, 80%, 60%);
+  --color-accent-purple: hsl(280, 75%, 55%);
+  --color-accent-pink: hsl(320, 85%, 60%);
+  --color-accent-rose: hsl(340, 80%, 65%);
+
+  /* Signal Colors - Neon & Vibrant */
+  --color-signal-buy: hsl(142, 76%, 50%);
+  --color-signal-buy-glow: hsl(142, 76%, 50%, 0.3);
+  --color-signal-sell: hsl(0, 84%, 60%);
+  --color-signal-sell-glow: hsl(0, 84%, 60%, 0.3);
+  --color-signal-neutral: hsl(45, 93%, 58%);
+  --color-signal-neutral-glow: hsl(45, 93%, 58%, 0.3);
+
+  /* Semantic Colors */
+  --color-success: hsl(142, 76%, 50%);
+  --color-success-bg: hsl(142, 76%, 50%, 0.1);
+  --color-error: hsl(0, 84%, 60%);
+  --color-error-bg: hsl(0, 84%, 60%, 0.1);
+  --color-warning: hsl(45, 93%, 58%);
+  --color-warning-bg: hsl(45, 93%, 58%, 0.1);
+  --color-info: hsl(210, 100%, 60%);
+  --color-info-bg: hsl(210, 100%, 60%, 0.1);
+
+  /* Neutral Colors - Dark Theme */
+  --color-gray-50: hsl(220, 20%, 98%);
+  --color-gray-100: hsl(220, 18%, 95%);
+  --color-gray-200: hsl(220, 16%, 88%);
+  --color-gray-300: hsl(220, 14%, 75%);
+  --color-gray-400: hsl(220, 12%, 60%);
+  --color-gray-500: hsl(220, 10%, 45%);
+  --color-gray-600: hsl(220, 12%, 35%);
+  --color-gray-700: hsl(220, 14%, 25%);
+  --color-gray-800: hsl(220, 16%, 15%);
+  --color-gray-900: hsl(220, 18%, 10%);
+  --color-gray-950: hsl(220, 20%, 5%);
+
+  /* Background Colors */
+  --bg-primary: hsl(220, 18%, 10%);
+  --bg-secondary: hsl(220, 16%, 15%);
+  --bg-tertiary: hsl(220, 14%, 20%);
+  --bg-elevated: hsl(220, 16%, 18%);
+  --bg-overlay: hsl(220, 18%, 10%, 0.95);
+
+  /* Text Colors */
+  --text-primary: hsl(220, 20%, 98%);
+  --text-secondary: hsl(220, 14%, 75%);
+  --text-tertiary: hsl(220, 12%, 60%);
+  --text-disabled: hsl(220, 10%, 45%);
+
+  /* Border Colors */
+  --border-primary: hsl(220, 14%, 25%);
+  --border-secondary: hsl(220, 12%, 20%);
+  --border-focus: var(--color-primary-500);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(190, 80%, 50%) 0%, hsl(270, 80%, 60%) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(270, 80%, 60%) 0%, hsl(320, 85%, 60%) 100%);
+  --gradient-success: linear-gradient(135deg, hsl(142, 76%, 50%) 0%, hsl(160, 70%, 45%) 100%);
+  --gradient-danger: linear-gradient(135deg, hsl(0, 84%, 60%) 0%, hsl(340, 80%, 65%) 100%);
+  --gradient-bg: linear-gradient(135deg, hsl(220, 18%, 10%) 0%, hsl(220, 16%, 15%) 50%, hsl(220, 18%, 10%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(220, 16%, 15%, 0.5) 0%, hsl(220, 14%, 20%, 0.5) 100%);
+
+  /* Glassmorphism */
+  --glass-bg: hsl(220, 16%, 18%, 0.7);
+  --glass-border: hsl(220, 20%, 98%, 0.1);
+  --glass-shadow: 0 8px 32px 0 hsl(220, 18%, 5%, 0.37);
+
+  /* ============================================
+     SPACING SCALE - 4px base
+     ============================================ */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  /* 4px */
+  --space-2: 0.5rem;
+  /* 8px */
+  --space-3: 0.75rem;
+  /* 12px */
+  --space-4: 1rem;
+  /* 16px */
+  --space-5: 1.25rem;
+  /* 20px */
+  --space-6: 1.5rem;
+  /* 24px */
+  --space-8: 2rem;
+  /* 32px */
+  --space-10: 2.5rem;
+  /* 40px */
+  --space-12: 3rem;
+  /* 48px */
+  --space-16: 4rem;
+  /* 64px */
+  --space-20: 5rem;
+  /* 80px */
+  --space-24: 6rem;
+  /* 96px */
+
+  /* ============================================
+     TYPOGRAPHY SCALE
+     ============================================ */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Font Sizes - Fluid Typography */
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+  --text-3xl: clamp(1.875rem, 1.6rem + 1.375vw, 2.25rem);
+  --text-4xl: clamp(2.25rem, 1.9rem + 1.75vw, 3rem);
+  --text-5xl: clamp(3rem, 2.5rem + 2.5vw, 4rem);
+
+  /* Font Weights */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* ============================================
+     SHADOWS & EFFECTS
+     ============================================ */
+  --shadow-xs: 0 1px 2px 0 hsl(220, 18%, 5%, 0.05);
+  --shadow-sm: 0 1px 3px 0 hsl(220, 18%, 5%, 0.1), 0 1px 2px -1px hsl(220, 18%, 5%, 0.1);
+  --shadow-md: 0 4px 6px -1px hsl(220, 18%, 5%, 0.1), 0 2px 4px -2px hsl(220, 18%, 5%, 0.1);
+  --shadow-lg: 0 10px 15px -3px hsl(220, 18%, 5%, 0.1), 0 4px 6px -4px hsl(220, 18%, 5%, 0.1);
+  --shadow-xl: 0 20px 25px -5px hsl(220, 18%, 5%, 0.1), 0 8px 10px -6px hsl(220, 18%, 5%, 0.1);
+  --shadow-2xl: 0 25px 50px -12px hsl(220, 18%, 5%, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 hsl(220, 18%, 5%, 0.05);
+
+  /* Glow Effects */
+  --glow-primary: 0 0 20px var(--color-primary-500);
+  --glow-success: 0 0 20px var(--color-signal-buy);
+  --glow-danger: 0 0 20px var(--color-signal-sell);
+  --glow-warning: 0 0 20px var(--color-signal-neutral);
+
+  /* ============================================
+     BORDER RADIUS
+     ============================================ */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-full: 9999px;
+
+  /* ============================================
+     TRANSITIONS & ANIMATIONS
+     ============================================ */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Easing Functions */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ============================================
+     Z-INDEX SCALE
+     ============================================ */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal-backdrop: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-tooltip: 1600;
+  --z-notification: 1700;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Glassmorphism */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-accent {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glow Effects */
+.glow-primary {
+  box-shadow: var(--glow-primary);
+}
+
+.glow-success {
+  box-shadow: var(--glow-success);
+}
+
+.glow-danger {
+  box-shadow: var(--glow-danger);
+}
+
+/* Animated Gradient Background */
+.animated-gradient-bg {
+  background: linear-gradient(-45deg,
+      hsl(220, 18%, 10%),
+      hsl(220, 16%, 15%),
+      hsl(270, 80%, 20%),
+      hsl(190, 80%, 20%));
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Shimmer Effect */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg,
+      transparent,
+      hsl(220, 20%, 98%, 0.1),
+      transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Pulse Animation */
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--color-primary-500);
+  }
+
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 20px 10px var(--color-primary-500);
+  }
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-primary-500);
+  color: var(--text-primary);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-700);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-600);
+}
+
+/* Focus Visible */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Disabled State */
+[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

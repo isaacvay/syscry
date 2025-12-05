@@ -65,17 +65,37 @@ def train_model(symbol="BTCUSDT", interval="1h", test_size=0.2):
     
     print(f"\nTrain: {len(X_train)}, Test: {len(X_test)}")
     
-    # Train model
+    # Train model with optimized hyperparameters
     print("\n🔧 Entraînement XGBoost...")
+    
+    # Calculate class weights for imbalanced data
+    from sklearn.utils.class_weight import compute_class_weight
+    classes = np.unique(y_train)
+    class_weights = compute_class_weight('balanced', classes=classes, y=y_train)
+    scale_pos_weight = class_weights[1] / class_weights[0] if len(class_weights) > 1 else 1.0
+    
     model = XGBClassifier(
-        n_estimators=100,
-        max_depth=5,
-        learning_rate=0.1,
+        n_estimators=200,  # Increased for better learning
+        max_depth=7,  # Deeper trees for more complex patterns
+        learning_rate=0.05,  # Lower for more precise learning
+        min_child_weight=3,  # Regularization
+        subsample=0.8,  # Row sampling
+        colsample_bytree=0.8,  # Column sampling
+        gamma=0.1,  # Minimum loss reduction
+        reg_alpha=0.1,  # L1 regularization
+        reg_lambda=1.0,  # L2 regularization
+        scale_pos_weight=scale_pos_weight,  # Handle class imbalance
         random_state=42,
-        eval_metric='logloss'
+        eval_metric='logloss',
+        early_stopping_rounds=20  # Early stopping
     )
     
-    model.fit(X_train, y_train)
+    # Fit with early stopping
+    model.fit(
+        X_train, y_train,
+        eval_set=[(X_test, y_test)],
+        verbose=False
+    )
     
     # Evaluate
     print("\n📈 Évaluation du modèle...")
@@ -100,9 +120,11 @@ def train_model(symbol="BTCUSDT", interval="1h", test_size=0.2):
     print("\n🔝 Top 10 Features:")
     print(feature_importance.head(10).to_string(index=False))
     
-    # Cross-validation
-    print("\n🔄 Cross-validation (5-fold)...")
-    cv_scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+    # Cross-validation with TimeSeriesSplit (better for time series)
+    print("\n🔄 Cross-validation (TimeSeriesSplit)...")
+    from sklearn.model_selection import TimeSeriesSplit
+    tscv = TimeSeriesSplit(n_splits=5)
+    cv_scores = cross_val_score(model, X, y, cv=tscv, scoring='accuracy')
     print(f"CV Accuracy: {cv_scores.mean():.3f} (+/- {cv_scores.std():.3f})")
     
     # Save model
@@ -156,7 +178,9 @@ if __name__ == "__main__":
     if args.symbol:
         symbols = [args.symbol]
     else:
-        symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+        from config import settings
+        symbols = settings.default_cryptos
+        print(f"ℹ️ Training for default symbols: {symbols}")
     
     for symbol in symbols:
         try:

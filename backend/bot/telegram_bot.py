@@ -1,13 +1,39 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from config import settings
 import requests
 
-# Configuration
+# Import constants
+try:
+    from constants import (
+        DEFAULT_API_TIMEOUT, TELEGRAM_API_TIMEOUT, TELEGRAM_ALERT_CHECK_INTERVAL,
+        TELEGRAM_RETRY_ATTEMPTS, TELEGRAM_RETRY_DELAY, MAX_BACKTEST_DAYS,
+        EMOJI_BUY, EMOJI_SELL, EMOJI_NEUTRAL, EMOJI_ALERT, EMOJI_SUCCESS, 
+        EMOJI_ERROR, EMOJI_CHART
+    )
+except ImportError:
+    # Fallback if constants not available
+    DEFAULT_API_TIMEOUT = 10
+    TELEGRAM_API_TIMEOUT = 10
+    TELEGRAM_ALERT_CHECK_INTERVAL = 3600
+    TELEGRAM_RETRY_ATTEMPTS = 3
+    TELEGRAM_RETRY_DELAY = 2
+    MAX_BACKTEST_DAYS = 90
+    EMOJI_BUY = "🟢"
+    EMOJI_SELL = "🔴"
+    EMOJI_NEUTRAL = "⚪"
+    EMOJI_ALERT = "🚨"
+    EMOJI_SUCCESS = "✅"
+    EMOJI_ERROR = "❌"
+    EMOJI_CHART = "📊"
+
+# Configuration - use environment variable with fallback
 BOT_TOKEN = settings.telegram_bot_token
-API_URL = "http://localhost:8000"
+API_URL = os.getenv("BACKEND_API_URL", "http://localhost:8000")
 
 # User watchlists (in-memory, could be moved to database)
 user_watchlists = {}
@@ -48,7 +74,7 @@ async def signal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = requests.post(
             f"{API_URL}/get-signal",
             json={"symbol": symbol, "timeframe": "1h"},
-            timeout=10
+            timeout=DEFAULT_API_TIMEOUT
         )
         
         if response.status_code == 200:
@@ -58,11 +84,11 @@ async def signal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(f"❌ Erreur: {data['error']}")
                 return
             
-            emoji = "⚪"
+            emoji = EMOJI_NEUTRAL
             if "BUY" in data['signal']:
-                emoji = "🟢"
+                emoji = EMOJI_BUY
             elif "SELL" in data['signal']:
-                emoji = "🔴"
+                emoji = EMOJI_SELL
             
             msg = f"""
 {emoji} **Signal: {data['symbol']}**
@@ -143,7 +169,7 @@ async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = requests.post(
             f"{API_URL}/signals/multi",
             json={"symbols": symbols, "timeframe": "1h"},
-            timeout=15
+            timeout=DEFAULT_API_TIMEOUT * 1.5  # Longer timeout for multiple signals
         )
         
         if response.status_code == 200:
@@ -155,11 +181,11 @@ async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if "error" in signal:
                     continue
                     
-                emoji = "⚪"
+                emoji = EMOJI_NEUTRAL
                 if "BUY" in signal['signal']:
-                    emoji = "🟢"
+                    emoji = EMOJI_BUY
                 elif "SELL" in signal['signal']:
-                    emoji = "🔴"
+                    emoji = EMOJI_SELL
                 
                 msg += f"{emoji} **{signal['symbol']}** - {signal['signal']} ({int(signal['confidence']*100)}%)\n"
                 msg += f"   Prix: ${signal['price']:.2f}\n\n"
@@ -175,7 +201,7 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         response = requests.get(
             f"{API_URL}/signals/history?limit=100",
-            timeout=10
+            timeout=DEFAULT_API_TIMEOUT
         )
         
         if response.status_code == 200:
@@ -223,8 +249,8 @@ async def backtest_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) > 1:
         try:
             days = int(context.args[1])
-            if days > 90:
-                days = 90
+            if days > MAX_BACKTEST_DAYS:
+                days = MAX_BACKTEST_DAYS
         except:
             pass
     
@@ -233,7 +259,7 @@ async def backtest_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         response = requests.post(
             f"{API_URL}/backtest?symbol={symbol}&days={days}",
-            timeout=60
+            timeout=60  # Backtest can take longer
         )
         
         if response.status_code == 200:
@@ -267,10 +293,53 @@ Profit Factor: {data['profit_factor']:.2f}
     except Exception as e:
         await update.message.reply_text(f"❌ Erreur: {str(e)}")
 
-async def send_alert_to_user(chat_id: int, signal_data: dict):
-    """Send alert to specific user (helper function)"""
-    # This would be called by a background task
-    pass
+# Store last known signal for each user+symbol to avoid spam
+# Format: {user_id: {symbol: "BUY"}}
+last_signals = {}
+
+async def check_alerts(context: ContextTypes.DEFAULT_TYPE):
+    """Background task to check for signals"""
+    for user_id, symbols in user_watchlists.items():
+        if not symbols:
+            continue
+            
+        try:
+            # Fetch signals for all symbols
+            response = requests.post(
+                f"{API_URL}/signals/multi",
+                json={"symbols": list(symbols), "timeframe": "1h"},
+                timeout=DEFAULT_API_TIMEOUT * 3  # Longer for background checks
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                signals = data.get("signals", [])
+                
+                for signal in signals:
+                    symbol = signal['symbol']
+                    current_signal = signal['signal']
+                    
+                    # Skip if error or neutral
+                    if "error" in signal or current_signal == "NEUTRE":
+                        continue
+                        
+                    # Check if signal changed
+                    last_user_signals = last_signals.get(user_id, {})
+                    last_signal = last_user_signals.get(symbol)
+                    
+                    if current_signal != last_signal:
+                        # Send alert
+                        emoji = EMOJI_BUY if "BUY" in current_signal else EMOJI_SELL
+                        msg = f"{EMOJI_ALERT} **ALERTE {symbol}**\n\n{emoji} Nouveau signal: **{current_signal}**\nPrix: ${signal['price']:.2f}\nConfiance: {int(signal['confidence']*100)}%"
+                        await context.bot.send_message(chat_id=user_id, text=msg)
+                        
+                        # Update last signal
+                        if user_id not in last_signals:
+                            last_signals[user_id] = {}
+                        last_signals[user_id][symbol] = current_signal
+                        
+        except Exception as e:
+            print(f"Error checking alerts for user {user_id}: {e}")
 
 def main():
     """Start the bot"""
@@ -293,6 +362,11 @@ def main():
     application.add_handler(CommandHandler("list", list_command))
     application.add_handler(CommandHandler("stats", stats_command))
     application.add_handler(CommandHandler("backtest", backtest_command))
+    
+    # Add background job for alerts (check every hour)
+    if application.job_queue:
+        application.job_queue.run_repeating(check_alerts, interval=TELEGRAM_ALERT_CHECK_INTERVAL, first=10)
+        print(f"{EMOJI_SUCCESS} Système d'alertes automatiques activé (intervalle: {TELEGRAM_ALERT_CHECK_INTERVAL}s)")
     
     # Start the bot
     print("✅ Bot démarré ! Utilisez /start pour commencer.")

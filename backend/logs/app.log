@@ -2,3 +2,433 @@
 2025-11-26 18:05:20 - crypto_ai - INFO - start_alerts:44 - Intervalle: 5 minutes
 2025-11-26 18:22:44 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BTCUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
 2025-11-27 16:39:59 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for ETHUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-11-27 20:01:54 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BNBUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-11-27 20:07:14 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BTCUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 11:09:46 - crypto_ai - INFO - start_alerts:43 - Cryptos: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT
+2025-12-03 11:09:46 - crypto_ai - INFO - start_alerts:44 - Intervalle: 5 minutes
+2025-12-03 11:09:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:10:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:10:17 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:10:22 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:14:05 - crypto_ai - WARNING - validate_required_settings:49 - Configuration warnings:
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:70 - ============================================================
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:72 - ============================================================
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:73 - Frontend URL: http://localhost:3000
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:74 - Database: sqlite:///./crypto_signals.db
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:75 - Default Cryptos: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:76 - Ensemble Models: True
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:77 - Sentiment Analysis: True
+2025-12-03 11:14:05 - crypto_ai - INFO - print_startup_info:78 - ============================================================
+2025-12-03 11:15:28 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:15:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:15:34 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:15:37 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:20:35 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BTCUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 11:20:54 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BTCUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 11:20:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:21:08 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:21:14 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:21:30 - crypto_ai - ERROR - send_telegram_message:32 - Erreur envoi Telegram: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 11:26:30 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:26:33 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:26:36 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:26:39 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:31:42 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:31:44 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:31:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:31:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:36:52 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:36:55 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:36:57 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:37:00 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:42:04 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:42:07 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:42:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:42:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:47:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:47:18 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:47:20 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:47:23 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:52:26 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:52:29 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:52:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:52:34 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:57:38 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:57:40 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:57:43 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 11:57:46 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:02:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:02:52 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:02:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:02:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:08:01 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:08:04 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:08:07 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:08:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:13:14 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:13:17 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:13:20 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:13:24 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:18:29 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:18:32 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:18:35 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:18:37 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:22:05,856 - crypto_ai - INFO - Database engine created with pool_size=10, max_overflow=20
+2025-12-03 12:22:05,923 - crypto_ai - WARNING - Configuration warnings:
+2025-12-03 12:22:05,924 - crypto_ai - WARNING -   ⚠️  REDDIT_CLIENT_ID/SECRET not set - Reddit sentiment disabled
+2025-12-03 12:22:05,926 - crypto_ai - INFO - ✅ Configuration validation passed
+2025-12-03 12:22:05,926 - crypto_ai - INFO - ✅ Sentiment analysis enabled with 2 API(s)
+2025-12-03 12:22:05,927 - crypto_ai - INFO - ============================================================
+2025-12-03 12:22:05,929 - crypto_ai - INFO - 🚀 Crypto AI Backend Starting
+2025-12-03 12:22:05,930 - crypto_ai - INFO - ============================================================
+2025-12-03 12:22:05,931 - crypto_ai - INFO - Frontend URL: http://localhost:3000
+2025-12-03 12:22:05,932 - crypto_ai - INFO - Database: sqlite:///./crypto_signals.db
+2025-12-03 12:22:05,933 - crypto_ai - INFO - Default Cryptos: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT
+2025-12-03 12:22:05,933 - crypto_ai - INFO - Ensemble Models: True
+2025-12-03 12:22:05,934 - crypto_ai - INFO - Sentiment Analysis: True
+2025-12-03 12:22:05,934 - crypto_ai - INFO - ============================================================
+2025-12-03 12:22:06,016 - crypto_ai - INFO - Starting up... Preloading ML models
+2025-12-03 12:22:20,589 - crypto_ai - INFO - ✅ Preloaded model: BTCUSDT 1h
+2025-12-03 12:22:21,535 - crypto_ai - INFO - ✅ Preloaded model: ETHUSDT 1h
+2025-12-03 12:22:21,535 - crypto_ai - INFO - Preloaded 2 ML models successfully
+2025-12-03 12:22:40,582 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-03 12:23:40 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:23:44 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:23:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:23:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:26:25,827 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-03 12:27:15,506 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-03 12:27:19,693 - crypto_ai - INFO - Successfully fetched 1000 candles for SOLUSDT 1h
+2025-12-03 12:27:24,725 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-03 12:27:30,849 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-03 12:28:22,031 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-03 12:28:25,741 - crypto_ai - INFO - Successfully fetched 1000 candles for SOLUSDT 1h
+2025-12-03 12:28:29,830 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-03 12:28:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:28:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:28:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:29:03 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:29:04,272 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-03 12:31:06,415 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-03 12:31:55,096 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-03 12:31:59,166 - crypto_ai - INFO - Successfully fetched 1000 candles for SOLUSDT 1h
+2025-12-03 12:32:03,122 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-03 12:32:37,873 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-03 12:33:41,726 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-03 12:34:06 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:34:09 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:34:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:34:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:34:28,331 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-03 12:34:32,264 - crypto_ai - INFO - Successfully fetched 1000 candles for SOLUSDT 1h
+2025-12-03 12:34:36,097 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-03 12:39:18 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:39:21 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:39:24 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:39:27 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:44:34 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BTCUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 12:44:36 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:44:40 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:44:44 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:49:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:49:50 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:49:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:49:55 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:55:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:55:20 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:55:27 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 12:55:33 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:00:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:00:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:01:01 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:01:04 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:06:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:06:13 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:06:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:06:19 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:11:23 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:11:26 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:11:29 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:11:33 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:16:45 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:16:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:16:58 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:17:06 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:22:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:22:20 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:22:24 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:22:28 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:27:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:27:34 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:27:38 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:27:42 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:32:45 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:32:48 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:32:51 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:32:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:37:57 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:37:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:38:02 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:38:05 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:43:08 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:43:11 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:43:13 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:43:17 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:48:26 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:48:30 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:48:36 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:48:40 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:53:43 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:53:46 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:53:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:53:52 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:58:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:58:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:59:01 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 13:59:05 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:04:09 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:04:11 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:04:14 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:04:18 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:09:23 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:09:25 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:09:28 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:09:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:14:36 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:14:38 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:14:42 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:14:46 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:19:50 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:19:58 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:20:01 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:20:04 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:25:07 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:25:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:25:13 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:25:16 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:30:22 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:30:24 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:30:29 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:30:32 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:35:38 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:35:42 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:35:44 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:35:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:40:50 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:40:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:40:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:40:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:46:04 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:46:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:46:14 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:46:22 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:51:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:51:43 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:51:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:51:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:57:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:57:14 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:57:17 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 14:57:20 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:02:25 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:02:29 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:02:34 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:02:37 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:07:43 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:07:46 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:07:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:07:52 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:12:57 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:13:01 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:13:05 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:13:09 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:18:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:18:19 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:18:22 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:18:25 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:23:30 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:23:35 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:23:39 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:23:41 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:28:45 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:28:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:28:51 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:28:54 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:33:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:34:02 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:34:06 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:34:09 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:39:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:39:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:39:18 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:39:20 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:44:24 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:44:26 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:44:29 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:44:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:49:35 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:49:38 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:49:42 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:49:45 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:54:48 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:54:51 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:54:54 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 15:54:57 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:00:01 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:00:04 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:00:07 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:00:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:05:14 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:05:21 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:05:25 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:05:27 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:10:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:10:37 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:10:40 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:10:44 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:15:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:15:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:15:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:16:07 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:21:10 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:21:13 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:21:16 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:21:19 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:26:30 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:26:37 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for ETHUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 16:26:42 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:26:49 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:26:56 - crypto_ai - ERROR - send_telegram_message:32 - Erreur envoi Telegram: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 16:32:08 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:32:24 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:32:35 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:32:41 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:37:48 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:37:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:38:00 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:38:03 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:43:06 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:43:09 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:43:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:43:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:48:19 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:48:22 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:48:24 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:48:28 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:53:31 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:53:33 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:53:36 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:53:38 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:58:52 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for BTCUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 16:59:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 16:59:41 - crypto_ai - ERROR - get_binance_data:37 - Error fetching data for SOLUSDT: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+2025-12-03 16:59:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:04:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:04:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:05:02 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:05:05 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:10:09 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:10:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:10:16 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:10:19 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:15:22 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:15:25 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:15:29 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:15:33 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:20:46 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:20:54 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:21:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:21:14 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:26:19 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:26:27 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:26:35 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:26:48 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:31:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:31:56 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:31:59 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:32:02 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:37:06 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:37:09 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:37:12 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:37:15 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:42:38 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:42:41 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:42:44 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:42:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:47:50 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:47:52 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:47:55 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:47:57 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:53:00 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:53:03 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:53:05 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:53:08 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:58:13 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:58:16 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:58:19 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 17:58:23 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:03:33 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:03:40 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:03:47 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:03:53 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:08:57 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:09:00 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:09:08 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:09:13 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:14:17 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:14:20 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:14:27 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-03 18:14:32 - crypto_ai - WARNING - generate_signal_service:42 - Could not add sentiment features: No module named 'textblob'
+2025-12-04 18:35:16,040 - crypto_ai - INFO - Database engine created with pool_size=10, max_overflow=20
+2025-12-04 18:35:16,264 - crypto_ai - WARNING - Configuration warnings:
+2025-12-04 18:35:16,265 - crypto_ai - WARNING -   ⚠️  REDDIT_CLIENT_ID/SECRET not set - Reddit sentiment disabled
+2025-12-04 18:35:16,265 - crypto_ai - INFO - ✅ Configuration validation passed
+2025-12-04 18:35:16,266 - crypto_ai - INFO - ✅ Sentiment analysis enabled with 2 API(s)
+2025-12-04 18:35:16,266 - crypto_ai - INFO - ============================================================
+2025-12-04 18:35:16,266 - crypto_ai - INFO - 🚀 Crypto AI Backend Starting
+2025-12-04 18:35:16,267 - crypto_ai - INFO - ============================================================
+2025-12-04 18:35:16,267 - crypto_ai - INFO - Frontend URL: http://localhost:3000
+2025-12-04 18:35:16,268 - crypto_ai - INFO - Database: sqlite:///./crypto_signals.db
+2025-12-04 18:35:16,268 - crypto_ai - INFO - Default Cryptos: BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT
+2025-12-04 18:35:16,268 - crypto_ai - INFO - Ensemble Models: True
+2025-12-04 18:35:16,269 - crypto_ai - INFO - Sentiment Analysis: True
+2025-12-04 18:35:16,269 - crypto_ai - INFO - ============================================================
+2025-12-04 18:35:16,486 - crypto_ai - INFO - Starting up... Preloading ML models
+2025-12-04 18:35:48,020 - crypto_ai - INFO - ✅ Preloaded model: BTCUSDT 1h
+2025-12-04 18:35:49,474 - crypto_ai - INFO - ✅ Preloaded model: ETHUSDT 1h
+2025-12-04 18:35:49,475 - crypto_ai - INFO - Preloaded 2 ML models successfully
+2025-12-04 18:36:02,244 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 18:37:03,625 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 18:37:08,917 - crypto_ai - INFO - Successfully fetched 1000 candles for SOLUSDT 1h
+2025-12-04 18:37:15,984 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 18:40:52,448 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:13:52,645 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:17:35,993 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:30:00,191 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:34:50,222 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:34:57,133 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 19:35:01,394 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 19:35:53,530 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:36:07,216 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 19:36:12,072 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 19:37:03,854 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:37:16,872 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 19:37:21,114 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 19:38:11,887 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:38:24,089 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 19:38:28,169 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 19:39:21,358 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 19:39:25,722 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 19:39:29,780 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 20:12:12,030 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 20:12:19,363 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 20:12:23,582 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 20:13:22,444 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 20:13:26,812 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 20:13:30,864 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 20:14:30,438 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 20:14:35,387 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 20:14:42,747 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2025-12-04 20:15:39,092 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2025-12-04 20:15:47,993 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2025-12-04 20:15:51,724 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h

@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Check } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Save, Check, Key, Settings as SettingsIcon, Bell } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
+import { Button } from "../components/ui/Button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
+import { slideUp, staggerContainer, staggerItem } from "../animations";
 
 interface SettingsData {
     binanceApiKey: string;
@@ -30,15 +35,12 @@ export default function SettingsPage() {
     const [availableCryptos, setAvailableCryptos] = useState<string[]>([]);
     const [availableTimeframes, setAvailableTimeframes] = useState<string[]>([]);
 
-    // Load settings and available options
     useEffect(() => {
-        // Fetch settings
         fetch('http://localhost:8000/settings')
             .then(res => res.json())
             .then(data => setSettings(data))
             .catch(err => console.error('Error loading settings:', err));
 
-        // Fetch available options
         fetch('http://localhost:8000/cryptos/list')
             .then(res => res.json())
             .then(data => {
@@ -67,7 +69,7 @@ export default function SettingsPage() {
             if (!response.ok) throw new Error('Erreur sauvegarde');
 
             setSaved(true);
-            toast.success('Paramètres sauvegardés sur le serveur !');
+            toast.success('Paramètres sauvegardés !');
             setTimeout(() => setSaved(false), 2000);
         } catch (e) {
             toast.error('Erreur lors de la sauvegarde');
@@ -80,134 +82,163 @@ export default function SettingsPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gray-900 text-white p-10 font-sans">
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white">
             <Toaster position="top-right" />
-            <div className="max-w-2xl mx-auto">
-                <header className="flex items-center gap-4 mb-10">
-                    <Link href="/" className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
-                        <ArrowLeft className="w-5 h-5 text-gray-400" />
-                    </Link>
-                    <h1 className="text-3xl font-bold">Paramètres</h1>
-                </header>
 
-                <div className="space-y-6">
+            {/* Background Effects */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+            </div>
+
+            <div className="relative z-10 max-w-4xl mx-auto px-6 py-10">
+                <motion.header className="mb-10" {...slideUp}>
+                    <div className="flex items-center gap-4 mb-6">
+                        <Link href="/">
+                            <Button variant="ghost" size="md" leftIcon={<ArrowLeft className="w-5 h-5" />}>
+                                Retour
+                            </Button>
+                        </Link>
+                    </div>
+                    <h1 className="text-4xl font-black mb-2">
+                        <span className="gradient-text">Paramètres</span>
+                    </h1>
+                    <p className="text-gray-400">Configurez votre système de trading</p>
+                </motion.header>
+
+                <motion.div
+                    className="space-y-6"
+                    variants={staggerContainer}
+                    initial="initial"
+                    animate="animate"
+                >
                     {/* API Configuration */}
-                    <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700">
-                        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                            🔑 Configuration API
-                        </h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Binance API Key</label>
-                                <input
+                    <motion.div variants={staggerItem}>
+                        <Card variant="gradient" glow>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Key className="w-5 h-5 text-cyan-400" />
+                                    Configuration API
+                                </CardTitle>
+                                <CardDescription>
+                                    Connectez votre compte Binance pour le trading en temps réel
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <Input
+                                    label="Binance API Key"
                                     type="password"
                                     value={settings.binanceApiKey || ''}
                                     onChange={(e) => handleChange('binanceApiKey', e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="Votre clé API Binance"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Binance Secret Key</label>
-                                <input
+                                <Input
+                                    label="Binance Secret Key"
                                     type="password"
                                     value={settings.binanceSecretKey || ''}
                                     onChange={(e) => handleChange('binanceSecretKey', e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="Votre clé secrète Binance"
                                 />
-                            </div>
-                        </div>
-                    </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
                     {/* Trading Preferences */}
-                    <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700">
-                        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                            ⚙️ Préférences de Trading
-                        </h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Paire par défaut</label>
-                                <select
-                                    value={settings.defaultCrypto || ''}
-                                    onChange={(e) => handleChange('defaultCrypto', e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                >
-                                    {availableCryptos.map(c => <option key={c}>{c}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Timeframe par défaut</label>
-                                <select
-                                    value={settings.defaultTimeframe || ''}
-                                    onChange={(e) => handleChange('defaultTimeframe', e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                >
-                                    {availableTimeframes.map(t => <option key={t}>{t}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    <motion.div variants={staggerItem}>
+                        <Card variant="gradient" glow>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <SettingsIcon className="w-5 h-5 text-purple-400" />
+                                    Préférences de Trading
+                                </CardTitle>
+                                <CardDescription>
+                                    Définissez vos paramètres par défaut
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Paire par défaut
+                                    </label>
+                                    <select
+                                        value={settings.defaultCrypto || ''}
+                                        onChange={(e) => handleChange('defaultCrypto', e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                                    >
+                                        {availableCryptos.map(c => <option key={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Timeframe par défaut
+                                    </label>
+                                    <select
+                                        value={settings.defaultTimeframe || ''}
+                                        onChange={(e) => handleChange('defaultTimeframe', e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                                    >
+                                        {availableTimeframes.map(t => <option key={t}>{t}</option>)}
+                                    </select>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
                     {/* Telegram Alerts */}
-                    <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700">
-                        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                            🔔 Alertes Telegram
-                        </h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Bot Token</label>
-                                <input
+                    <motion.div variants={staggerItem}>
+                        <Card variant="gradient" glow>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Bell className="w-5 h-5 text-yellow-400" />
+                                    Alertes Telegram
+                                </CardTitle>
+                                <CardDescription>
+                                    Recevez des notifications sur Telegram
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <Input
+                                    label="Bot Token"
                                     type="text"
                                     value={settings.telegramBotToken || ''}
                                     onChange={(e) => handleChange('telegramBotToken', e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Chat ID</label>
-                                <input
+                                <Input
+                                    label="Chat ID"
                                     type="text"
                                     value={settings.telegramChatId || ''}
                                     onChange={(e) => handleChange('telegramChatId', e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="123456789"
                                 />
-                            </div>
-                            <div className="flex items-center gap-3 mt-4">
-                                <input
-                                    type="checkbox"
-                                    id="alerts"
-                                    checked={settings.alertsEnabled || false}
-                                    onChange={(e) => handleChange('alertsEnabled', e.target.checked)}
-                                    className="w-5 h-5 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500"
-                                />
-                                <label htmlFor="alerts" className="text-gray-300">Activer les notifications automatiques</label>
-                            </div>
-                        </div>
-                    </div>
+                                <div className="flex items-center gap-3 pt-2">
+                                    <input
+                                        type="checkbox"
+                                        id="alerts"
+                                        checked={settings.alertsEnabled || false}
+                                        onChange={(e) => handleChange('alertsEnabled', e.target.checked)}
+                                        className="w-5 h-5 rounded border-gray-700 bg-gray-900 text-cyan-600 focus:ring-cyan-500"
+                                    />
+                                    <label htmlFor="alerts" className="text-gray-300 cursor-pointer">
+                                        Activer les notifications automatiques
+                                    </label>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
-                    <button
-                        onClick={handleSave}
-                        className={`w-full font-bold py-4 rounded-xl transition flex items-center justify-center gap-2 ${saved
-                            ? 'bg-green-600 hover:bg-green-700'
-                            : 'bg-blue-600 hover:bg-blue-700'
-                            } text-white`}
-                    >
-                        {saved ? (
-                            <>
-                                <Check className="w-5 h-5" />
-                                Sauvegardé !
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-5 h-5" />
-                                Sauvegarder les paramètres
-                            </>
-                        )}
-                    </button>
-                </div>
+                    <motion.div variants={staggerItem}>
+                        <Button
+                            variant={saved ? "success" : "primary"}
+                            size="lg"
+                            onClick={handleSave}
+                            className="w-full"
+                            leftIcon={saved ? <Check className="w-5 h-5" /> : <Save className="w-5 h-5" />}
+                        >
+                            {saved ? 'Sauvegardé !' : 'Sauvegarder les paramètres'}
+                        </Button>
+                    </motion.div>
+                </motion.div>
             </div>
         </main>
     );

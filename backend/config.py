@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     binance_api_key: str = ""
     binance_secret_key: str = ""
     
-    # Telegram Configuration
-    telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "8182517592:AAES9VxhR5UDjqq2kwfjILH7IH6WN8yLIPw")
-    telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "7686161669")
+    # Telegram Configuration (Required for alerts)
+    telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "")
     
     # Trading Configuration
     default_cryptos: List[str] = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"]
@@ -30,14 +30,15 @@ class Settings(BaseSettings):
     # API Settings
     api_rate_limit: int = 100  # requests per minute
     frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    backend_api_url: str = os.getenv("BACKEND_API_URL", "http://localhost:8000")
     
-    # Sentiment Analysis API Keys (Optional)
-    twitter_bearer_token: str = os.getenv("TWITTER_BEARER_TOKEN", "AAAAAAAAAAAAAAAAAAAAAFyU5gEAAAAAqJDLfFYu1KCutNJP0iVXM9WBTDI%3D6E9WgF85PAM5VInPRMno2W0srTKdCD8vxQHEPteDvRBuDByCmM")
-    # Reddit API disabled - no access
-    reddit_client_id: str = ""
-    reddit_client_secret: str = ""
-    reddit_user_agent: str = ""
-    news_api_key: str = os.getenv("NEWS_API_KEY", "8e8efbc0977f4447963b323cd544e6e3")
+    # Sentiment Analysis API Keys (Optional - features disabled if not provided)
+    twitter_bearer_token: str = os.getenv("TWITTER_BEARER_TOKEN", "")
+    # Reddit API
+    reddit_client_id: str = os.getenv("REDDIT_CLIENT_ID", "")
+    reddit_client_secret: str = os.getenv("REDDIT_CLIENT_SECRET", "")
+    reddit_user_agent: str = os.getenv("REDDIT_USER_AGENT", "CryptoSentimentBot/1.0")
+    news_api_key: str = os.getenv("NEWS_API_KEY", "")
     
     # Sentiment Configuration
     sentiment_enabled: bool = True
@@ -60,6 +61,27 @@ class Settings(BaseSettings):
     risk_per_trade: float = 0.02  # 2% of capital per trade
     max_portfolio_risk: float = 0.10  # 10% max portfolio risk
     max_drawdown: float = 0.20  # 20% max drawdown
+    
+    # Feature Engineering
+    feature_selection_enabled: bool = True
+    feature_selection_threshold: float = 0.01  # Minimum importance
+    max_features: int = 50  # Maximum number of features
+    
+    # Model Training
+    use_early_stopping: bool = True
+    early_stopping_rounds: int = 20
+    use_class_weights: bool = True
+    use_probability_calibration: bool = True
+    
+    # Ensemble
+    ensemble_voting_weights: str = "performance"  # uniform, performance
+    min_model_accuracy: float = 0.52  # Minimum accuracy for inclusion
+    
+    # Preprocessing
+    outlier_detection_enabled: bool = True
+    outlier_method: str = "iqr"  # iqr, zscore, none
+    outlier_threshold: float = 3.0
+    feature_scaling_method: str = "robust"  # standard, robust, minmax
     
     class Config:
         env_file = ".env"

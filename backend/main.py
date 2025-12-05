@@ -15,6 +15,60 @@ from database import get_db, save_signal, get_signal_history, Signal
 from config import settings
 from logger import logger
 
+# Import custom metrics
+try:
+    from metrics import (
+        signal_requests_total, ml_models_loaded,
+        increment_websocket_connections, decrement_websocket_connections,
+        update_ml_models_gauge
+    )
+    METRICS_AVAILABLE = True
+except ImportError:
+    logger.warning("Custom metrics not available")
+    METRICS_AVAILABLE = False
+
+# Import constants and exceptions
+try:
+    from constants import (
+        RATE_LIMIT_SIGNAL, RATE_LIMIT_MULTI_SIGNAL, RATE_LIMIT_BACKTEST,
+        RATE_LIMIT_HISTORY, DEFAULT_QUERY_LIMIT, MAX_QUERY_LIMIT,
+        DEFAULT_BACKTEST_DAYS, MAX_BACKTEST_DAYS, WEBSOCKET_UPDATE_INTERVAL
+    )
+    from exceptions import (
+        BinanceAPIError, InsufficientDataError, DataQualityError,
+        ModelNotFoundError, PredictionError, DatabaseError
+    )
+except ImportError:
+    # Fallback values
+    RATE_LIMIT_SIGNAL = "10/minute"
+    RATE_LIMIT_MULTI_SIGNAL = "5/minute"
+    RATE_LIMIT_BACKTEST = "2/minute"
+    RATE_LIMIT_HISTORY = "20/minute"
+    DEFAULT_QUERY_LIMIT = 100
+    MAX_QUERY_LIMIT = 1000
+    DEFAULT_BACKTEST_DAYS = 30
+    MAX_BACKTEST_DAYS = 90
+    WEBSOCKET_UPDATE_INTERVAL = 30
+    
+    class BinanceAPIError(Exception): pass
+    class InsufficientDataError(Exception): pass
+    class DataQualityError(Exception): pass
+    class ModelNotFoundError(Exception): pass
+    class PredictionError(Exception): pass
+    class DatabaseError(Exception): pass
+
+# Validate configuration on startup
+try:
+    from config_validator import validate_required_settings, print_startup_info
+    validate_required_settings()
+    print_startup_info()
+except ImportError:
+    logger.warning("config_validator not found - skipping validation")
+except ValueError as e:
+    logger.error(f"Configuration validation failed: {e}")
+    logger.error("Please check your .env file and backend/.env.example")
+    raise
+
 # Initialize FastAPI with metadata
 app = FastAPI(
     title="Crypto AI Backend",
@@ -41,15 +95,103 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global exception handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+# GZIP Compression for responses
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compress responses > 1KB
+
+# Startup event - Preload ML models
+@app.on_event("startup")
+async def startup_event():
+    """Preload ML models on startup to reduce first-request latency"""
+    logger.info("Starting up... Preloading ML models")
+    
+    try:
+        from model.predict import load_model
+        
+        # Preload models for default cryptos and timeframes
+        preload_symbols = settings.default_cryptos[:2]  # Preload top 2 to save startup time
+        preload_timeframes = ["1h"]  # Most common timeframe
+        
+        loaded_count = 0
+        for symbol in preload_symbols:
+            for timeframe in preload_timeframes:
+                try:
+                    model_data = load_model(symbol, timeframe, use_ensemble=settings.use_ensemble)
+                    if model_data:
+                        loaded_count += 1
+                        logger.info(f"✅ Preloaded model: {symbol} {timeframe}")
+                except Exception as e:
+                    logger.warning(f"Could not preload model for {symbol} {timeframe}: {e}")
+        
+        logger.info(f"Preloaded {loaded_count} ML models successfully")
+        
+        # Update Prometheus gauge
+        if METRICS_AVAILABLE:
+            update_ml_models_gauge(loaded_count)
+        
+    except Exception as e:
+        logger.error(f"Error during model preloading: {e}")
+        logger.warning("Continuing without preloaded models...")
+
+# Custom exception handlers
+@app.exception_handler(BinanceAPIError)
+async def binance_error_handler(request: Request, exc: BinanceAPIError):
+    logger.error(f"Binance API error: {exc}")
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": "Binance service temporarily unavailable",
+            "detail": "Please try again in a few moments",
+            "type": "BinanceAPIError"
+        }
+    )
+
+@app.exception_handler(InsufficientDataError)
+async def insufficient_data_handler(request: Request, exc: InsufficientDataError):
+    logger.warning(f"Insufficient data: {exc}")
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": "Insufficient data for analysis",
+            "detail": str(exc),
+            "type": "InsufficientDataError"
+        }
+    )
+
+@app.exception_handler(DataQualityError)
+async def data_quality_handler(request: Request, exc: DataQualityError):
+    logger.error(f"Data quality error: {exc}")
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": "Data quality issue",
+            "detail": str(exc),
+            "type": "DataQualityError"
+        }
+    )
+
+@app.exception_handler(DatabaseError)
+async def database_error_handler(request: Request, exc: DatabaseError):
+    logger.error(f"Database error: {exc}")
     return JSONResponse(
         status_code=500,
         content={
-            "error": str(exc),
+            "error": "Database error",
+            "detail": "An error occurred while accessing the database",
+            "type": "DatabaseError"
+        }
+    )
+
+# Global exception handler (fallback)
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"Unhandled exception: {exc}")  # This logs the full traceback
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
             "type": type(exc).__name__,
-            "detail": "Une erreur interne s'est produite"
+            "detail": "An unexpected error occurred"
         }
     )
 
@@ -98,8 +240,143 @@ def read_root():
 
 @app.get("/health", tags=["Health"])
 def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "timestamp": "now"}
+    """Simple health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat() + "Z"}
+
+@app.get("/health/detailed", tags=["Health"])
+async def detailed_health_check():
+    """
+    Detailed health check - verifies all critical components
+    
+    Returns:
+        dict: Health status of database, Binance API, and ML models
+    """
+    from datetime import datetime
+    import requests
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "components": {}
+    }
+    
+    # Check Database
+    try:
+        from database import SessionLocal
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        db.close()
+        health_status["components"]["database"] = {
+            "status": "healthy",
+            "message": "Database connection OK"
+        }
+    except Exception as e:
+        health_status["status"] = "degraded"
+        health_status["components"]["database"] = {
+            "status": "unhealthy",
+            "message": f"Database error: {str(e)}"
+        }
+        logger.error(f"Health check - Database error: {e}")
+    
+    # Check Binance API
+    try:
+        response = requests.get(
+            "https://api.binance.com/api/v3/ping",
+            timeout=5
+        )
+        if response.status_code == 200:
+            health_status["components"]["binance_api"] = {
+                "status": "healthy",
+                "message": "Binance API reachable"
+            }
+        else:
+            health_status["status"] = "degraded"
+            health_status["components"]["binance_api"] = {
+                "status": "degraded",
+                "message": f"Binance API returned status {response.status_code}"
+            }
+    except Exception as e:
+        health_status["status"] = "degraded"
+        health_status["components"]["binance_api"] = {
+            "status": "unhealthy",
+            "message": f"Binance API unreachable: {str(e)}"
+        }
+        logger.error(f"Health check - Binance API error: {e}")
+    
+    # Check ML Models
+    try:
+        from model.predict import _model_cache
+        loaded_models = len(_model_cache)
+        
+        if loaded_models > 0:
+            health_status["components"]["ml_models"] = {
+                "status": "healthy",
+                "message": f"{loaded_models} models loaded in cache",
+                "loaded_models": loaded_models
+            }
+        else:
+            health_status["components"]["ml_models"] = {
+                "status": "warning",
+                "message": "No models loaded (will load on first request)",
+                "loaded_models": 0
+            }
+    except Exception as e:
+        health_status["components"]["ml_models"] = {
+            "status": "unknown",
+            "message": f"Could not check ML models: {str(e)}"
+        }
+    
+    # Check Cache
+    try:
+        from cache import cache
+        health_status["components"]["cache"] = {
+            "status": "healthy",
+            "message": "In-memory cache available"
+        }
+    except Exception as e:
+        health_status["components"]["cache"] = {
+            "status": "unhealthy",
+            "message": f"Cache error: {str(e)}"
+        }
+    
+    return health_status
+
+@app.get("/metrics/summary", tags=["Monitoring"])
+async def metrics_summary():
+    """
+    Get a summary of custom application metrics
+    
+    Returns:
+        dict: Summary of key metrics
+    """
+    try:
+        from model.predict import _model_cache
+        from cache import cache
+        
+        summary = {
+            "ml_models": {
+                "loaded": len(_model_cache),
+                "models": list(_model_cache.keys()) if _model_cache else []
+            },
+            "cache": {
+                "type": "in-memory",
+                "available": True
+            },
+            "endpoints": {
+                "prometheus": "/metrics",
+                "health_simple": "/health",
+                "health_detailed": "/health/detailed",
+                "api_docs": "/docs"
+            }
+        }
+        
+        return summary
+    except Exception as e:
+        logger.error(f"Error generating metrics summary: {e}")
+        return {
+            "error": "Could not generate metrics summary",
+            "detail": str(e)
+        }
 
 @app.get("/cryptos/list", tags=["Configuration"])
 def get_crypto_list():
@@ -156,8 +433,8 @@ def update_settings_api(data: SettingsUpdate):
     return {"status": "updated"}
 
 @app.post("/backtest", tags=["Analysis"])
-@limiter.limit("2/minute")
-async def run_backtest(request: Request, symbol: str = "BTCUSDT", days: int = 30):
+@limiter.limit(RATE_LIMIT_BACKTEST)
+async def run_backtest(request: Request, symbol: str = "BTCUSDT", days: int = DEFAULT_BACKTEST_DAYS):
     """
     Run backtest simulation for a symbol
     
@@ -174,8 +451,8 @@ async def run_backtest(request: Request, symbol: str = "BTCUSDT", days: int = 30
     try:
         from ml.backtest import simulate_trading
         
-        if days > 90:
-            raise HTTPException(status_code=400, detail="Maximum 90 days allowed")
+        if days > MAX_BACKTEST_DAYS:
+            raise HTTPException(status_code=400, detail=f"Maximum {MAX_BACKTEST_DAYS} days allowed")
         
         results = simulate_trading(symbol, days)
         return results
@@ -184,7 +461,7 @@ async def run_backtest(request: Request, symbol: str = "BTCUSDT", days: int = 30
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/get-signal", tags=["Signals"])
-@limiter.limit("10/minute")
+@limiter.limit(RATE_LIMIT_SIGNAL)
 async def get_signal(request: Request, data: RequestData):
     """
     Get trading signal for a single cryptocurrency
@@ -214,7 +491,7 @@ async def get_signal(request: Request, data: RequestData):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/signals/multi", tags=["Signals"])
-@limiter.limit("5/minute")
+@limiter.limit(RATE_LIMIT_MULTI_SIGNAL)
 async def get_multi_signals(request: Request, data: MultiRequestData):
     """
     Get signals for multiple cryptocurrencies
@@ -237,25 +514,41 @@ async def get_multi_signals(request: Request, data: MultiRequestData):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/signals/history", tags=["Signals"])
-@limiter.limit("20/minute")
-async def get_history(request: Request, symbol: Optional[str] = None, limit: int = 100):
+@limiter.limit(RATE_LIMIT_HISTORY)
+async def get_history(
+    request: Request, 
+    symbol: Optional[str] = None, 
+    limit: int = DEFAULT_QUERY_LIMIT,
+    offset: int = 0
+):
     """
-    Get signal history from database
+    Get signal history from database with pagination
     
     Args:
         symbol: Optional crypto symbol to filter
-        limit: Maximum number of results (default: 100)
+        limit: Maximum number of results (default: 100, max: 1000)
+        offset: Number of records to skip for pagination (default: 0)
         
     Returns:
-        dict: Historical signals with metadata
+        dict: Historical signals with metadata and pagination info
+        
+    Example:
+        GET /signals/history?symbol=BTCUSDT&limit=50&offset=0
     """
     try:
-        if limit > 1000:
-            raise HTTPException(status_code=400, detail="Limit cannot exceed 1000")
+        if limit > MAX_QUERY_LIMIT:
+            raise HTTPException(status_code=400, detail=f"Limit cannot exceed {MAX_QUERY_LIMIT}")
+        
+        if offset < 0:
+            raise HTTPException(status_code=400, detail="Offset cannot be negative")
             
-        signals = get_signal_history(symbol, limit)
+        signals = get_signal_history(symbol, limit, offset)
+        
         return {
             "count": len(signals),
+            "limit": limit,
+            "offset": offset,
+            "has_more": len(signals) == limit,  # Hint if there are more results
             "signals": [
                 {
                     "id": s.id,
@@ -288,6 +581,10 @@ async def websocket_signals(websocket: WebSocket):
     await websocket.accept()
     logger.info("WebSocket client connected")
     
+    # Track connection
+    if METRICS_AVAILABLE:
+        increment_websocket_connections()
+    
     try:
         while True:
             # Generate signals for all default cryptos
@@ -307,11 +604,18 @@ async def websocket_signals(websocket: WebSocket):
                 "timestamp": asyncio.get_event_loop().time()
             })
             
-            # Wait 30 seconds before next update
-            await asyncio.sleep(30)
+            # Wait before next update
+            await asyncio.sleep(WEBSOCKET_UPDATE_INTERVAL)
             
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
-        await websocket.close()
+    finally:
+        # Track disconnection
+        if METRICS_AVAILABLE:
+            decrement_websocket_connections()
+        try:
+            await websocket.close()
+        except:
+            pass

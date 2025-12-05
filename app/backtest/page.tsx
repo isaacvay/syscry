@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Play, TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Play, TrendingUp, TrendingDown, Activity, BarChart3 } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
+import { Button } from "../components/ui/Button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
+import { Badge } from "../components/ui/Badge";
+import { slideUp, staggerContainer, staggerItem } from "../animations";
 
 interface BacktestResult {
     symbol: string;
@@ -54,133 +60,174 @@ export default function BacktestPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gray-900 text-white p-10 font-sans">
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white">
             <Toaster position="top-right" />
-            <div className="max-w-6xl mx-auto">
-                <header className="flex items-center gap-4 mb-10">
-                    <Link href="/" className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
-                        <ArrowLeft className="w-5 h-5 text-gray-400" />
-                    </Link>
-                    <h1 className="text-3xl font-bold">Backtest Simulation</h1>
-                </header>
+
+            {/* Background Effects */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 left-0 w-96 h-96 bg-green-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+            </div>
+
+            <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+                <motion.header className="mb-10" {...slideUp}>
+                    <div className="flex items-center gap-4 mb-6">
+                        <Link href="/">
+                            <Button variant="ghost" size="md" leftIcon={<ArrowLeft className="w-5 h-5" />}>
+                                Retour
+                            </Button>
+                        </Link>
+                    </div>
+                    <h1 className="text-4xl font-black mb-2">
+                        <span className="gradient-text">Backtest Simulation</span>
+                    </h1>
+                    <p className="text-gray-400">Testez vos stratégies sur des données historiques</p>
+                </motion.header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Configuration */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-                            <h2 className="text-xl font-semibold mb-6">Configuration</h2>
-                            <div className="space-y-4">
+                    <motion.div className="lg:col-span-1" {...slideUp}>
+                        <Card variant="gradient" glow>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BarChart3 className="w-5 h-5 text-cyan-400" />
+                                    Configuration
+                                </CardTitle>
+                                <CardDescription>
+                                    Paramètres de simulation
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Crypto</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Crypto
+                                    </label>
                                     <select
                                         value={symbol}
                                         onChange={(e) => setSymbol(e.target.value)}
-                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
                                     >
                                         {availableCryptos.map(c => <option key={c}>{c}</option>)}
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Durée (Jours)</label>
-                                    <input
-                                        type="number"
-                                        value={days}
-                                        onChange={(e) => setDays(Number(e.target.value))}
-                                        min="1"
-                                        max="90"
-                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Max 90 jours</p>
-                                </div>
-                                <button
+                                <Input
+                                    label="Durée (Jours)"
+                                    type="number"
+                                    value={days}
+                                    onChange={(e) => setDays(Number(e.target.value))}
+                                    min={1}
+                                    max={90}
+                                    helperText="Maximum 90 jours"
+                                />
+                                <Button
+                                    variant="primary"
+                                    size="lg"
                                     onClick={runBacktest}
-                                    disabled={loading}
-                                    className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition ${loading
-                                        ? 'bg-gray-700 cursor-not-allowed'
-                                        : 'bg-blue-600 hover:bg-blue-700'
-                                        }`}
+                                    isLoading={loading}
+                                    className="w-full"
+                                    leftIcon={loading ? undefined : <Play className="w-5 h-5" />}
                                 >
-                                    {loading ? (
-                                        <Activity className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Play className="w-5 h-5" />
-                                            Lancer Simulation
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                                    {loading ? 'Simulation en cours...' : 'Lancer Simulation'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
                     {/* Results */}
                     <div className="lg:col-span-2">
                         {result ? (
-                            <div className="space-y-6">
+                            <motion.div
+                                className="space-y-6"
+                                variants={staggerContainer}
+                                initial="initial"
+                                animate="animate"
+                            >
                                 {/* Stats Cards */}
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700">
-                                        <p className="text-gray-400 text-sm mb-1">Win Rate</p>
-                                        <p className={`text-2xl font-bold ${result.win_rate >= 50 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {result.win_rate.toFixed(1)}%
-                                        </p>
-                                    </div>
-                                    <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700">
-                                        <p className="text-gray-400 text-sm mb-1">Profit Total</p>
-                                        <p className={`text-2xl font-bold ${result.total_profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                            {result.total_profit.toFixed(2)}%
-                                        </p>
-                                    </div>
-                                    <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700">
-                                        <p className="text-gray-400 text-sm mb-1">Total Trades</p>
-                                        <p className="text-2xl font-bold text-white">
-                                            {result.total_trades}
-                                        </p>
-                                    </div>
-                                </div>
+                                <motion.div variants={staggerItem} className="grid grid-cols-3 gap-4">
+                                    <Card variant="glass" hover glow>
+                                        <CardContent>
+                                            <p className="text-gray-400 text-sm mb-2">Win Rate</p>
+                                            <p className={`text-3xl font-bold ${result.win_rate >= 50 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {result.win_rate.toFixed(1)}%
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                    <Card variant="glass" hover glow>
+                                        <CardContent>
+                                            <p className="text-gray-400 text-sm mb-2">Profit Total</p>
+                                            <p className={`text-3xl font-bold ${result.total_profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {result.total_profit >= 0 ? '+' : ''}{result.total_profit.toFixed(2)}%
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                    <Card variant="glass" hover glow>
+                                        <CardContent>
+                                            <p className="text-gray-400 text-sm mb-2">Total Trades</p>
+                                            <p className="text-3xl font-bold text-cyan-400">
+                                                {result.total_trades}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
 
                                 {/* Trades List */}
-                                <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
-                                    <div className="p-4 border-b border-gray-700">
-                                        <h3 className="font-bold">Historique des Trades</h3>
-                                    </div>
-                                    <div className="max-h-[400px] overflow-y-auto">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-gray-900/50">
-                                                <tr>
-                                                    <th className="text-left p-3 text-gray-400">Date</th>
-                                                    <th className="text-left p-3 text-gray-400">Type</th>
-                                                    <th className="text-right p-3 text-gray-400">Entrée</th>
-                                                    <th className="text-right p-3 text-gray-400">Sortie</th>
-                                                    <th className="text-right p-3 text-gray-400">Profit</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {result.trades.map((trade, i) => (
-                                                    <tr key={i} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                                                        <td className="p-3 text-gray-400">{new Date(trade.date).toLocaleDateString()}</td>
-                                                        <td className="p-3">
-                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${trade.type === 'BUY' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-                                                                {trade.type}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-3 text-right font-mono">${trade.entry_price.toFixed(2)}</td>
-                                                        <td className="p-3 text-right font-mono">${trade.exit_price.toFixed(2)}</td>
-                                                        <td className={`p-3 text-right font-bold ${trade.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                            {trade.profit > 0 ? '+' : ''}{trade.profit.toFixed(2)}%
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
+                                <motion.div variants={staggerItem}>
+                                    <Card variant="gradient">
+                                        <CardHeader>
+                                            <CardTitle>Historique des Trades</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="max-h-[500px] overflow-y-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead className="sticky top-0 bg-gray-900/95 backdrop-blur-sm">
+                                                        <tr className="border-b border-gray-700">
+                                                            <th className="text-left p-3 text-gray-400 font-semibold">Date</th>
+                                                            <th className="text-left p-3 text-gray-400 font-semibold">Type</th>
+                                                            <th className="text-right p-3 text-gray-400 font-semibold">Entrée</th>
+                                                            <th className="text-right p-3 text-gray-400 font-semibold">Sortie</th>
+                                                            <th className="text-right p-3 text-gray-400 font-semibold">Profit</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {result.trades.map((trade, i) => (
+                                                            <tr key={i} className="border-b border-gray-700/30 hover:bg-gray-800/30 transition-colors">
+                                                                <td className="p-3 text-gray-400">
+                                                                    {new Date(trade.date).toLocaleDateString('fr-FR')}
+                                                                </td>
+                                                                <td className="p-3">
+                                                                    <Badge
+                                                                        variant={trade.type === 'BUY' ? 'success' : 'danger'}
+                                                                        size="sm"
+                                                                    >
+                                                                        {trade.type === 'BUY' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                                                        {trade.type}
+                                                                    </Badge>
+                                                                </td>
+                                                                <td className="p-3 text-right font-mono text-white">
+                                                                    ${trade.entry_price.toFixed(2)}
+                                                                </td>
+                                                                <td className="p-3 text-right font-mono text-white">
+                                                                    ${trade.exit_price.toFixed(2)}
+                                                                </td>
+                                                                <td className={`p-3 text-right font-bold font-mono ${trade.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                                    {trade.profit > 0 ? '+' : ''}{trade.profit.toFixed(2)}%
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            </motion.div>
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-500 bg-gray-800/50 rounded-2xl border border-gray-700 border-dashed p-10">
-                                <Activity className="w-12 h-12 mb-4 opacity-50" />
-                                <p>Lancez une simulation pour voir les résultats</p>
-                            </div>
+                            <Card variant="glass" className="h-full">
+                                <CardContent className="flex flex-col items-center justify-center text-gray-500 p-20">
+                                    <Activity className="w-16 h-16 mb-4 opacity-50" />
+                                    <p className="text-lg">Lancez une simulation pour voir les résultats</p>
+                                </CardContent>
+                            </Card>
                         )}
                     </div>
                 </div>

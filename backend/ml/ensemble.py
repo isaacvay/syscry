@@ -194,9 +194,12 @@ class EnsembleTrainer:
         self.performance = performance
         return performance
     
-    def create_voting_ensemble(self) -> VotingClassifier:
+    def create_voting_ensemble(self, use_weights: bool = True) -> VotingClassifier:
         """
-        Create voting classifier ensemble
+        Create voting classifier ensemble with optional performance-based weights
+        
+        Args:
+            use_weights: Use performance-based weights instead of uniform
         
         Returns:
             VotingClassifier instance
@@ -207,10 +210,28 @@ class EnsembleTrainer:
         # Create list of (name, model) tuples
         estimators = [(name, model) for name, model in self.models.items()]
         
+        # Calculate weights based on performance
+        weights = None
+        if use_weights and self.performance:
+            # Weight = (accuracy - baseline) / (1 - baseline)
+            # Baseline is random guess (0.5)
+            baseline = 0.5
+            weights = []
+            for name, _ in estimators:
+                if name in self.performance:
+                    acc = self.performance[name]['test_accuracy']
+                    weight = max(0.1, (acc - baseline) / (1 - baseline))  # Minimum weight of 0.1
+                    weights.append(weight)
+                else:
+                    weights.append(1.0)
+            
+            print(f"  Weighted voting: {dict(zip([n for n, _ in estimators], weights))}")
+        
         # Soft voting (uses predicted probabilities)
         voting = VotingClassifier(
             estimators=estimators,
-            voting='soft'
+            voting='soft',
+            weights=weights
         )
         
         return voting
@@ -252,16 +273,18 @@ class EnsembleTrainer:
         X_train: pd.DataFrame,
         y_train: pd.Series,
         X_test: pd.DataFrame,
-        y_test: pd.Series
+        y_test: pd.Series,
+        use_calibration: bool = True
     ) -> Dict[str, Dict]:
         """
-        Train voting and stacking ensembles
+        Train voting and stacking ensembles with optional probability calibration
         
         Args:
             X_train: Training features
             y_train: Training target
             X_test: Test features
             y_test: Test target
+            use_calibration: Apply probability calibration
             
         Returns:
             Dict of ensemble performance metrics
@@ -273,8 +296,19 @@ class EnsembleTrainer:
         
         # Voting Ensemble
         print("\n📊 Training Voting Ensemble...")
-        self.voting_ensemble = self.create_voting_ensemble()
+        self.voting_ensemble = self.create_voting_ensemble(use_weights=True)
         self.voting_ensemble.fit(X_train, y_train)
+        
+        # Apply calibration if requested
+        if use_calibration:
+            from sklearn.calibration import CalibratedClassifierCV
+            print("  Calibrating probabilities...")
+            self.voting_ensemble = CalibratedClassifierCV(
+                self.voting_ensemble, 
+                method='sigmoid', 
+                cv=3
+            )
+            self.voting_ensemble.fit(X_train, y_train)
         
         y_pred_vote = self.voting_ensemble.predict(X_test)
         y_proba_vote = self.voting_ensemble.predict_proba(X_test)[:, 1]
@@ -295,6 +329,17 @@ class EnsembleTrainer:
         print("\n📊 Training Stacking Ensemble...")
         self.stacking_ensemble = self.create_stacking_ensemble()
         self.stacking_ensemble.fit(X_train, y_train)
+        
+        # Apply calibration if requested
+        if use_calibration:
+            from sklearn.calibration import CalibratedClassifierCV
+            print("  Calibrating probabilities...")
+            self.stacking_ensemble = CalibratedClassifierCV(
+                self.stacking_ensemble, 
+                method='sigmoid', 
+                cv=3
+            )
+            self.stacking_ensemble.fit(X_train, y_train)
         
         y_pred_stack = self.stacking_ensemble.predict(X_test)
         y_proba_stack = self.stacking_ensemble.predict_proba(X_test)[:, 1]
