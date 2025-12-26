@@ -12,7 +12,11 @@ class Settings(BaseSettings):
     telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "")
     
     # Trading Configuration
-    default_cryptos: List[str] = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"]
+    default_cryptos: List[str] = [
+        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
+        "ADAUSDT", "DOGEUSDT", "AVAXUSDT", "DOTUSDT", "MATICUSDT",
+        "LINKUSDT", "SHIBUSDT"
+    ]
     default_timeframe: str = "1h"
     available_timeframes: List[str] = ["15m", "1h", "4h", "1d", "1w"]
     

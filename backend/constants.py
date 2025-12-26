@@ -58,7 +58,7 @@ HEURISTIC_WEIGHT_VOLUME = 0.2
 # Rate Limiting
 # ============================================
 RATE_LIMIT_SIGNAL = "10/minute"
-RATE_LIMIT_MULTI_SIGNAL = "5/minute"
+RATE_LIMIT_MULTI_SIGNAL = "30/minute"
 RATE_LIMIT_BACKTEST = "2/minute"
 RATE_LIMIT_HISTORY = "20/minute"
 

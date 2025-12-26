@@ -48,6 +48,67 @@ class Settings(Base):
     key = Column(String, unique=True, index=True)
     value = Column(String)
 
+
+class TradingSession(Base):
+    """Trading simulation session - persists even when browser is closed"""
+    __tablename__ = "trading_sessions"
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, default="Session")
+    strategy_name = Column(String, default="Balanced")
+    strategy_risk_per_trade = Column(Float, default=0.02)
+    strategy_stop_loss = Column(Float, default=0.03)
+    strategy_take_profit = Column(Float, default=0.06)
+    strategy_max_positions = Column(Integer, default=5)
+    strategy_trailing_stop = Column(Integer, default=1)  # 0 or 1
+    symbols = Column(String, default="BTCUSDT,ETHUSDT,BNBUSDT")  # Comma-separated
+    initial_balance = Column(Float, default=10000.0)
+    current_balance = Column(Float, default=10000.0)
+    is_active = Column(Integer, default=0)  # 0 or 1
+    auto_trade = Column(Integer, default=0)  # 0 or 1
+    total_trades = Column(Integer, default=0)
+    winning_trades = Column(Integer, default=0)
+    losing_trades = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class SessionPosition(Base):
+    """Open position in a trading session"""
+    __tablename__ = "session_positions"
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, index=True)
+    symbol = Column(String, index=True)
+    quantity = Column(Float)
+    average_price = Column(Float)
+    current_price = Column(Float)
+    stop_loss = Column(Float)
+    take_profit = Column(Float)
+    trailing_stop_price = Column(Float, nullable=True)
+    pnl = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class SessionTrade(Base):
+    """Executed trade in a trading session"""
+    __tablename__ = "session_trades"
+    __table_args__ = {'extend_existing': True}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, index=True)
+    symbol = Column(String, index=True)
+    trade_type = Column(String)  # BUY or SELL
+    price = Column(Float)
+    quantity = Column(Float)
+    confidence = Column(Float)
+    signal_reason = Column(String)  # BUY, SELL, STOP_LOSS, TAKE_PROFIT
+    pnl = Column(Float, default=0.0)  # Only for SELL trades
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+
 # Create engine with connection pooling
 try:
     engine = create_engine(

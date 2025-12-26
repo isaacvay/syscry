@@ -132,6 +132,40 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Error during model preloading: {e}")
         logger.warning("Continuing without preloaded models...")
+    
+    # Start background trading service
+    try:
+        from services.trading_service import trading_service
+        trading_service.start()
+        logger.info("✅ Background trading service started")
+    except Exception as e:
+        logger.error(f"Failed to start trading service: {e}")
+    
+    # Start Telegram alert service
+    try:
+        from services.telegram_alerts import telegram_alert_service
+        telegram_alert_service.start()
+        logger.info("✅ Telegram alert service started")
+    except Exception as e:
+        logger.error(f"Failed to start Telegram alert service: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    try:
+        from services.trading_service import trading_service
+        trading_service.stop()
+        logger.info("Trading service stopped")
+    except Exception as e:
+        logger.error(f"Error stopping trading service: {e}")
+    
+    try:
+        from services.telegram_alerts import telegram_alert_service
+        telegram_alert_service.stop()
+        logger.info("Telegram alert service stopped")
+    except Exception as e:
+        logger.error(f"Error stopping Telegram alert service: {e}")
 
 # Custom exception handlers
 @app.exception_handler(BinanceAPIError)
@@ -619,3 +653,238 @@ async def websocket_signals(websocket: WebSocket):
             await websocket.close()
         except:
             pass
+
+
+# ============================================
+# Trading Session Endpoints
+# ============================================
+
+class SessionCreate(BaseModel):
+    name: str = "New Session"
+    strategyName: str = "Balanced"
+    initialBalance: float = 10000.0
+    symbols: List[str] = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+    strategyConfig: Optional[dict] = None
+
+
+class SessionUpdate(BaseModel):
+    name: Optional[str] = None
+    isActive: Optional[bool] = None
+    autoTrade: Optional[bool] = None
+    strategyName: Optional[str] = None
+    strategyRiskPerTrade: Optional[float] = None
+    strategyStopLoss: Optional[float] = None
+    strategyTakeProfit: Optional[float] = None
+    strategyMaxPositions: Optional[int] = None
+    strategyTrailingStop: Optional[bool] = None
+    symbols: Optional[str] = None
+
+
+@app.get("/trading/sessions", tags=["Trading Sessions"])
+async def list_trading_sessions():
+    """
+    Get all trading sessions
+    
+    Returns:
+        List of all trading sessions with their current status
+    """
+    try:
+        from services.trading_service import get_all_sessions
+        sessions = get_all_sessions()
+        return {"sessions": sessions, "count": len(sessions)}
+    except Exception as e:
+        logger.error(f"Error getting sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/trading/sessions", tags=["Trading Sessions"])
+async def create_trading_session(data: SessionCreate):
+    """
+    Create a new trading session
+    
+    Args:
+        data: Session configuration
+        
+    Returns:
+        Created session details
+    """
+    try:
+        from services.trading_service import create_session
+        
+        strategy_config = data.strategyConfig or {
+            "risk_per_trade": 0.02,
+            "stop_loss": 0.03,
+            "take_profit": 0.06,
+            "max_positions": 5,
+            "trailing_stop": True
+        }
+        
+        session = create_session(
+            name=data.name,
+            strategy_name=data.strategyName,
+            initial_balance=data.initialBalance,
+            symbols=data.symbols,
+            strategy_config=strategy_config
+        )
+        
+        return {"session": session, "message": "Session created successfully"}
+    except Exception as e:
+        logger.error(f"Error creating session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/trading/sessions/{session_id}", tags=["Trading Sessions"])
+async def get_trading_session(session_id: str):
+    """
+    Get trading session details including positions and recent trades
+    
+    Args:
+        session_id: Session ID
+        
+    Returns:
+        Session details with positions and trades
+    """
+    try:
+        from services.trading_service import get_session
+        session = get_session(session_id)
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"session": session}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/trading/sessions/{session_id}", tags=["Trading Sessions"])
+async def update_trading_session(session_id: str, data: SessionUpdate):
+    """
+    Update a trading session (start/stop/pause, change settings)
+    
+    Args:
+        session_id: Session ID
+        data: Fields to update
+        
+    Returns:
+        Updated session
+    """
+    try:
+        from services.trading_service import update_session
+        
+        # Convert camelCase to snake_case for database
+        updates = {}
+        if data.name is not None:
+            updates["name"] = data.name
+        if data.isActive is not None:
+            updates["is_active"] = data.isActive
+        if data.autoTrade is not None:
+            updates["auto_trade"] = data.autoTrade
+        if data.strategyName is not None:
+            updates["strategy_name"] = data.strategyName
+        if data.strategyRiskPerTrade is not None:
+            updates["strategy_risk_per_trade"] = data.strategyRiskPerTrade
+        if data.strategyStopLoss is not None:
+            updates["strategy_stop_loss"] = data.strategyStopLoss
+        if data.strategyTakeProfit is not None:
+            updates["strategy_take_profit"] = data.strategyTakeProfit
+        if data.strategyMaxPositions is not None:
+            updates["strategy_max_positions"] = data.strategyMaxPositions
+        if data.strategyTrailingStop is not None:
+            updates["strategy_trailing_stop"] = data.strategyTrailingStop
+        if data.symbols is not None:
+            updates["symbols"] = data.symbols
+        
+        session = update_session(session_id, updates)
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"session": session, "message": "Session updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/trading/sessions/{session_id}", tags=["Trading Sessions"])
+async def delete_trading_session(session_id: str):
+    """
+    Delete a trading session and all related data
+    
+    Args:
+        session_id: Session ID
+        
+    Returns:
+        Deletion confirmation
+    """
+    try:
+        from services.trading_service import delete_session
+        success = delete_session(session_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"message": "Session deleted successfully", "id": session_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/trading/sessions/{session_id}/start", tags=["Trading Sessions"])
+async def start_trading_session(session_id: str, auto_trade: bool = True):
+    """
+    Start a trading session
+    
+    Args:
+        session_id: Session ID
+        auto_trade: Whether to enable auto-trading
+        
+    Returns:
+        Updated session
+    """
+    try:
+        from services.trading_service import update_session
+        session = update_session(session_id, {"is_active": True, "auto_trade": auto_trade})
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"session": session, "message": "Session started"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error starting session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/trading/sessions/{session_id}/stop", tags=["Trading Sessions"])
+async def stop_trading_session(session_id: str):
+    """
+    Stop a trading session
+    
+    Args:
+        session_id: Session ID
+        
+    Returns:
+        Updated session  
+    """
+    try:
+        from services.trading_service import update_session
+        session = update_session(session_id, {"is_active": False, "auto_trade": False})
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"session": session, "message": "Session stopped"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error stopping session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

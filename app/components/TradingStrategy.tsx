@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from './ui/Card';
 import { Badge } from './ui/Badge';
-import { TrendingUp, Shield, Zap, Target, Activity, Settings } from 'lucide-react';
+import { TrendingUp, Shield, Zap, Target, Activity, Settings, Rocket, DollarSign } from 'lucide-react';
 
 interface Strategy {
     name: string;
@@ -12,9 +12,30 @@ interface Strategy {
     takeProfit: number;
     maxPositions: number;
     trailingStop: boolean;
+    signalMode?: 'normal' | 'aggressive'; // Backend signal filtering mode
 }
 
 const STRATEGIES: Strategy[] = [
+    {
+        name: 'Normal',
+        description: 'Stratégie équilibrée avec signaux confirmés - Moins de trades, plus de sécurité',
+        riskPerTrade: 0.02, // 2%
+        stopLoss: 0.03, // 3%
+        takeProfit: 0.06, // 6%
+        maxPositions: 4,
+        trailingStop: true,
+        signalMode: 'normal',
+    },
+    {
+        name: 'High Gain',
+        description: '🚀 Plus de trades, gains potentiels élevés - Accepte plus de risque',
+        riskPerTrade: 0.04, // 4%
+        stopLoss: 0.05, // 5%
+        takeProfit: 0.15, // 15%
+        maxPositions: 8,
+        trailingStop: false,
+        signalMode: 'aggressive',
+    },
     {
         name: 'Conservative',
         description: 'Faible risque, gains modérés et stables',
@@ -23,24 +44,7 @@ const STRATEGIES: Strategy[] = [
         takeProfit: 0.04, // 4%
         maxPositions: 3,
         trailingStop: true,
-    },
-    {
-        name: 'Balanced',
-        description: 'Équilibre optimal entre risque et rendement',
-        riskPerTrade: 0.02, // 2%
-        stopLoss: 0.03, // 3%
-        takeProfit: 0.06, // 6%
-        maxPositions: 5,
-        trailingStop: true,
-    },
-    {
-        name: 'Aggressive',
-        description: 'Risque élevé pour gains potentiels maximaux',
-        riskPerTrade: 0.03, // 3%
-        stopLoss: 0.05, // 5%
-        takeProfit: 0.10, // 10%
-        maxPositions: 8,
-        trailingStop: false,
+        signalMode: 'normal',
     },
     {
         name: 'Custom',
@@ -50,20 +54,21 @@ const STRATEGIES: Strategy[] = [
         takeProfit: 0.06, // 6%
         maxPositions: 5,
         trailingStop: true,
+        signalMode: 'normal',
     },
 ];
 
 const strategyIcons = {
+    Normal: Activity,
+    'High Gain': Rocket,
     Conservative: Shield,
-    Balanced: Activity,
-    Aggressive: Zap,
     Custom: Settings,
 };
 
 const strategyColors = {
+    Normal: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30',
+    'High Gain': 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30',
     Conservative: 'from-green-500/20 to-emerald-500/20 border-green-500/30',
-    Balanced: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30',
-    Aggressive: 'from-orange-500/20 to-red-500/20 border-orange-500/30',
     Custom: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
 };
 

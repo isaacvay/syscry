@@ -54,7 +54,7 @@ describe('useWebSocketSignals', () => {
         mockUseWebSocket.mockImplementation((url, options) => {
             // Simulate connection opening
             if (options?.onOpen) {
-                setTimeout(() => options.onOpen({} as any), 0);
+                setTimeout(() => options.onOpen?.({} as any), 0);
             }
 
             return {
@@ -82,7 +82,7 @@ describe('useWebSocketSignals', () => {
         mockUseWebSocket.mockImplementation((url, options) => {
             // Simulate disconnection
             if (options?.onClose) {
-                setTimeout(() => options.onClose({} as any), 0);
+                setTimeout(() => options.onClose?.({} as any), 0);
             }
 
             return {

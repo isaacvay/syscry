@@ -57,10 +57,20 @@ class MarketPredictor:
         price: float,
         ema20: float,
         volatility: float,
-        sentiment: Optional[float] = None
+        sentiment: Optional[float] = None,
+        adx: Optional[float] = None,
+        volume_ratio: Optional[float] = None,
+        macd: Optional[float] = None,
+        stoch_k: Optional[float] = None
     ) -> Signal:
         """
-        Determine trading signal based on multiple factors
+        IMPROVED: Determine trading signal with market regime detection
+        
+        Strategy improvements:
+        1. Market regime filter (ADX) - only trade in trends
+        2. RSI contrarian - buy oversold (<30), sell overbought (>70)
+        3. Volume confirmation - require above-average volume
+        4. Confluence scoring - multiple confirmations needed
         
         Args:
             probability: ML model probability of price increase (0-1)
@@ -69,32 +79,110 @@ class MarketPredictor:
             ema20: 20-period EMA
             volatility: Price volatility measure
             sentiment: Optional sentiment score (-1 to +1)
+            adx: ADX indicator for trend strength (optional)
+            volume_ratio: Current volume / average volume (optional)
+            macd: MACD value (optional)
+            stoch_k: Stochastic %K (optional)
             
         Returns:
             Signal enum value
         """
-        # Adjust probability with sentiment if available
+        # === MARKET REGIME DETECTION ===
+        # ADX < 20 = ranging market (avoid momentum trades)
+        # ADX > 25 = trending market (momentum works)
+        is_trending = adx is None or adx > 25
+        is_strong_trend = adx is not None and adx > 40
+        is_ranging = adx is not None and adx < 20
+        
+        # === VOLUME CONFIRMATION ===
+        # Require volume > 1.2x average for strong signals
+        has_volume = volume_ratio is None or volume_ratio > 1.0
+        has_strong_volume = volume_ratio is not None and volume_ratio > 1.5
+        
+        # === SENTIMENT ADJUSTMENT ===
         adjusted_prob = probability
         if sentiment is not None:
-            # Sentiment can shift probability by up to 0.1
             sentiment_adjustment = sentiment * 0.1
             adjusted_prob = np.clip(probability + sentiment_adjustment, 0, 1)
         
-        # Strong signals require high confidence + technical confirmation
-        if adjusted_prob > 0.70 and rsi < 40 and price > ema20:
+        # === CONFLUENCE SCORING ===
+        buy_score = 0
+        sell_score = 0
+        
+        # 1. ML Probability (weight: 3)
+        if adjusted_prob > 0.65:
+            buy_score += 3
+        elif adjusted_prob > 0.55:
+            buy_score += 1
+        elif adjusted_prob < 0.35:
+            sell_score += 3
+        elif adjusted_prob < 0.45:
+            sell_score += 1
+        
+        # 2. RSI - CONTRARIAN SIGNALS (weight: 2)
+        # Buy when oversold (< 30), sell when overbought (> 70)
+        if rsi < 30:
+            buy_score += 2  # Oversold = BUY opportunity
+        elif rsi < 40:
+            buy_score += 1
+        elif rsi > 70:
+            sell_score += 2  # Overbought = SELL opportunity
+        elif rsi > 60:
+            sell_score += 1
+        
+        # 3. Price vs EMA trend (weight: 2)
+        ema_distance = (price - ema20) / ema20 if ema20 > 0 else 0
+        if ema_distance > 0.02:  # Price 2%+ above EMA
+            buy_score += 2 if is_trending else 1
+        elif ema_distance < -0.02:  # Price 2%+ below EMA
+            sell_score += 2 if is_trending else 1
+        
+        # 4. MACD confirmation (weight: 1)
+        if macd is not None:
+            if macd > 0:
+                buy_score += 1
+            elif macd < 0:
+                sell_score += 1
+        
+        # 5. Stochastic confirmation (weight: 1)
+        if stoch_k is not None:
+            if stoch_k < 20:
+                buy_score += 1  # Oversold
+            elif stoch_k > 80:
+                sell_score += 1  # Overbought
+        
+        # 6. Volume bonus (weight: 1)
+        if has_strong_volume:
+            if buy_score > sell_score:
+                buy_score += 1
+            elif sell_score > buy_score:
+                sell_score += 1
+        
+        # === SIGNAL DECISION ===
+        
+        # In ranging market, only take contrarian trades (RSI extremes)
+        if is_ranging:
+            if rsi < 25 and buy_score >= 4:
+                return Signal.BUY
+            elif rsi > 75 and sell_score >= 4:
+                return Signal.SELL
+            else:
+                return Signal.HOLD  # Avoid trading in range
+        
+        # STRONG signals: high confluence + trend + volume
+        if buy_score >= 6 and is_strong_trend and has_volume:
             return Signal.STRONG_BUY
-        elif adjusted_prob < 0.30 and rsi > 60 and price < ema20:
+        elif sell_score >= 6 and is_strong_trend and has_volume:
             return Signal.STRONG_SELL
         
-        # Regular signals
-        elif adjusted_prob > 0.60 and price > ema20:
+        # Regular signals: good confluence + trending
+        if buy_score >= 4 and is_trending:
             return Signal.BUY
-        elif adjusted_prob < 0.40 and price < ema20:
+        elif sell_score >= 4 and is_trending:
             return Signal.SELL
         
         # Default to HOLD
-        else:
-            return Signal.HOLD
+        return Signal.HOLD
     
     def calculate_leverage(
         self,
@@ -271,7 +359,7 @@ class MarketPredictor:
         Args:
             probability: ML model probability of price increase
             price: Current price
-            indicators: Dict with rsi, ema20, atr, volatility
+            indicators: Dict with rsi, ema20, atr, volatility, adx, volume, macd, stoch_k
             account_balance: Account balance for position sizing
             sentiment: Optional sentiment score
             
@@ -283,10 +371,23 @@ class MarketPredictor:
         ema20 = indicators.get('ema20', price)
         atr = indicators.get('atr', price * 0.02)  # Default 2% ATR
         volatility = indicators.get('volatility', 0.02)
+        adx = indicators.get('adx')
+        volume_ratio = indicators.get('volume_ratio')
+        macd = indicators.get('macd')
+        stoch_k = indicators.get('stoch_k')
         
-        # Generate signal
+        # Generate signal with improved strategy
         signal = self.predict_signal(
-            probability, rsi, price, ema20, volatility, sentiment
+            probability=probability,
+            rsi=rsi,
+            price=price,
+            ema20=ema20,
+            volatility=volatility,
+            sentiment=sentiment,
+            adx=adx,
+            volume_ratio=volume_ratio,
+            macd=macd,
+            stoch_k=stoch_k
         )
         
         # Calculate leverage

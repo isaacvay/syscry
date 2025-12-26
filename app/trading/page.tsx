@@ -2,28 +2,35 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Pause, Activity, TrendingUp, TrendingDown, Target, BarChart3 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    ArrowLeft, Play, Pause, Activity, TrendingUp, TrendingDown,
+    Target, BarChart3, RefreshCw, Server, Zap, DollarSign,
+    Percent, Clock, Wallet, LineChart, PieChart, ArrowUpRight,
+    ArrowDownRight, Sparkles, Shield, Flame
+} from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import TradingStrategy, { STRATEGIES, Strategy } from '../components/TradingStrategy';
-import PortfolioChart from '../components/PortfolioChart';
+import SessionManager from '../components/SessionManager';
 import { staggerContainer, staggerItem } from '../animations';
 import toast from 'react-hot-toast';
 
 interface Trade {
-    id: string;
+    id: number;
     symbol: string;
-    type: 'BUY' | 'SELL';
+    type: string;
     price: number;
     quantity: number;
-    timestamp: Date;
+    timestamp: string;
     confidence: number;
-    signal: string;
+    signalReason: string;
+    pnl: number;
 }
 
 interface Position {
+    id: number;
     symbol: string;
     quantity: number;
     averagePrice: number;
@@ -34,697 +41,599 @@ interface Position {
     trailingStopPrice?: number;
 }
 
-interface Stats {
+interface SessionStats {
     totalTrades: number;
     winningTrades: number;
     losingTrades: number;
     winRate: number;
 }
 
-export default function TradingSimulation() {
-    const [isActive, setIsActive] = useState(false);
-    const [autoTrade, setAutoTrade] = useState(false);
-    const [balance, setBalance] = useState(10000);
-    const [trades, setTrades] = useState<Trade[]>([]);
-    const [positions, setPositions] = useState<Position[]>([]);
-    const [stats, setStats] = useState<Stats>({
-        totalTrades: 0,
-        winningTrades: 0,
-        losingTrades: 0,
-        winRate: 0,
-    });
-    const [portfolioHistory, setPortfolioHistory] = useState<{ time: number; value: number }[]>([]);
-    const [currentStrategy, setCurrentStrategy] = useState<Strategy>(STRATEGIES[1]); // Default: Balanced
-    const [initialBalance, setInitialBalance] = useState(10000);
+interface TradingSession {
+    id: string;
+    name: string;
+    strategy: Strategy;
+    symbols: string[];
+    initialBalance: number;
+    currentBalance: number;
+    isActive: boolean;
+    autoTrade: boolean;
+    stats: SessionStats;
+    positions?: Position[];
+    trades?: Trade[];
+    createdAt: string;
+    updatedAt: string;
+}
 
-    const selectedSymbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT'];
+const API_URL = 'http://localhost:8000';
 
-    const totalValue = balance + positions.reduce((sum, p) => sum + (p.quantity * p.currentPrice), 0);
-    const totalPnL = totalValue - initialBalance;
-    const totalPnLPercent = (totalPnL / initialBalance) * 100;
+// Animated counter component
+const AnimatedValue = ({ value, prefix = '', suffix = '', decimals = 2 }: { value: number; prefix?: string; suffix?: string; decimals?: number }) => {
+    return (
+        <motion.span
+            key={value}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="font-mono"
+        >
+            {prefix}{value.toFixed(decimals)}{suffix}
+        </motion.span>
+    );
+};
 
-    // Fetch signals from API and execute trades
-    const fetchSignalsAndTrade = useCallback(async () => {
-        if (!isActive || !autoTrade) return;
-
-        try {
-            const response = await fetch('http://localhost:8000/signals/multi', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ symbols: selectedSymbols }),
-            });
-
-            if (!response.ok) {
-                console.error('Failed to fetch signals');
-                return;
-            }
-
-            const data = await response.json();
-
-            // Execute trades based on signals
-            for (const signalData of data.signals) {
-                if (signalData.signal === 'BUY' && signalData.confidence > 0.6) {
-                    executeTrade(
-                        signalData.symbol,
-                        'BUY',
-                        signalData.current_price,
-                        signalData.confidence,
-                        signalData.signal
-                    );
-                } else if (signalData.signal === 'SELL' && signalData.confidence > 0.6) {
-                    // Check if we have a position to sell
-                    const position = positions.find(p => p.symbol === signalData.symbol);
-                    if (position) {
-                        executeTrade(
-                            signalData.symbol,
-                            'SELL',
-                            signalData.current_price,
-                            signalData.confidence,
-                            signalData.signal
-                        );
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching signals:', error);
-        }
-    }, [isActive, autoTrade, selectedSymbols, positions]);
-
-    // Execute a trade
-    const executeTrade = (
-        symbol: string,
-        type: 'BUY' | 'SELL',
-        price: number,
-        confidence: number,
-        signal: string
-    ) => {
-        const riskAmount = balance * currentStrategy.riskPerTrade;
-        const quantity = riskAmount / price;
-
-        if (type === 'BUY') {
-            // Check max positions limit
-            if (positions.length >= currentStrategy.maxPositions) {
-                toast.error(`Maximum de ${currentStrategy.maxPositions} positions atteint`);
-                return;
-            }
-
-            const cost = quantity * price;
-            if (cost > balance) {
-                toast.error(`Solde insuffisant pour acheter ${symbol}`);
-                return;
-            }
-
-            // Calculate stop-loss and take-profit
-            const stopLoss = price * (1 - currentStrategy.stopLoss);
-            const takeProfit = price * (1 + currentStrategy.takeProfit);
-
-            // Deduct from balance
-            setBalance(prev => prev - cost);
-
-            // Update or create position
-            setPositions(prev => {
-                const existingPosition = prev.find(p => p.symbol === symbol);
-                if (existingPosition) {
-                    const totalQuantity = existingPosition.quantity + quantity;
-                    const totalCost = (existingPosition.averagePrice * existingPosition.quantity) + cost;
-                    const newAvgPrice = totalCost / totalQuantity;
-                    const newStopLoss = newAvgPrice * (1 - currentStrategy.stopLoss);
-                    const newTakeProfit = newAvgPrice * (1 + currentStrategy.takeProfit);
-
-                    return prev.map(p =>
-                        p.symbol === symbol
-                            ? {
-                                ...p,
-                                quantity: totalQuantity,
-                                averagePrice: newAvgPrice,
-                                currentPrice: price,
-                                stopLoss: newStopLoss,
-                                takeProfit: newTakeProfit,
-                            }
-                            : p
-                    );
-                } else {
-                    return [
-                        ...prev,
-                        {
-                            symbol,
-                            quantity,
-                            averagePrice: price,
-                            currentPrice: price,
-                            pnl: 0,
-                            stopLoss,
-                            takeProfit,
-                        },
-                    ];
-                }
-            });
-
-            // Add trade to history
-            const newTrade: Trade = {
-                id: Date.now().toString(),
-                symbol,
-                type,
-                price,
-                quantity,
-                timestamp: new Date(),
-                confidence,
-                signal,
-            };
-            setTrades(prev => [newTrade, ...prev]);
-
-            toast.success(`✅ Achat: ${quantity.toFixed(6)} ${symbol} à $${price.toFixed(2)}`);
-        } else if (type === 'SELL') {
-            const position = positions.find(p => p.symbol === symbol);
-            if (!position) {
-                toast.error(`Aucune position ${symbol} à vendre`);
-                return;
-            }
-
-            const revenue = position.quantity * price;
-            const cost = position.averagePrice * position.quantity;
-            const pnl = revenue - cost;
-
-            // Add to balance
-            setBalance(prev => prev + revenue);
-
-            // Remove position
-            setPositions(prev => prev.filter(p => p.symbol !== symbol));
-
-            // Add trade to history
-            const newTrade: Trade = {
-                id: Date.now().toString(),
-                symbol,
-                type,
-                price,
-                quantity: position.quantity,
-                timestamp: new Date(),
-                confidence,
-                signal,
-            };
-            setTrades(prev => [newTrade, ...prev]);
-
-            // Update stats - track wins and losses
-            setStats(prev => ({
-                ...prev,
-                totalTrades: prev.totalTrades + 1,
-                winningTrades: pnl > 0 ? prev.winningTrades + 1 : prev.winningTrades,
-                losingTrades: pnl < 0 ? prev.losingTrades + 1 : prev.losingTrades,
-            }));
-
-            const pnlColor = pnl >= 0 ? '🟢' : '🔴';
-            toast.success(`${pnlColor} Vente: ${position.quantity.toFixed(6)} ${symbol} - P&L: $${pnl.toFixed(2)}`);
-        }
+// Glowing stat card
+const StatCard = ({
+    title,
+    value,
+    subValue,
+    icon: Icon,
+    color = 'cyan',
+    isPositive,
+    prefix = '',
+    suffix = ''
+}: {
+    title: string;
+    value: number;
+    subValue?: string;
+    icon: React.ElementType;
+    color?: 'cyan' | 'green' | 'red' | 'purple' | 'orange';
+    isPositive?: boolean;
+    prefix?: string;
+    suffix?: string;
+}) => {
+    const colorClasses = {
+        cyan: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30',
+        green: 'from-green-500/20 to-emerald-500/20 border-green-500/30',
+        red: 'from-red-500/20 to-rose-500/20 border-red-500/30',
+        purple: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
+        orange: 'from-orange-500/20 to-amber-500/20 border-orange-500/30',
     };
 
-    // Update positions with current prices periodically
-    useEffect(() => {
-        if (!isActive) return;
-
-        const interval = setInterval(() => {
-            setPositions(prev =>
-                prev.map(position => {
-                    // Simulate price movement (±0.5%)
-                    const priceChange = (Math.random() - 0.5) * 0.01;
-                    const newPrice = position.currentPrice * (1 + priceChange);
-                    const pnl = (newPrice - position.averagePrice) * position.quantity;
-
-                    // Update trailing stop if enabled
-                    let newTrailingStop = position.trailingStopPrice;
-                    if (currentStrategy.trailingStop && pnl > 0) {
-                        const trailingStopPrice = newPrice * (1 - currentStrategy.stopLoss);
-                        if (!newTrailingStop || trailingStopPrice > newTrailingStop) {
-                            newTrailingStop = trailingStopPrice;
-                        }
-                    }
-
-                    return {
-                        ...position,
-                        currentPrice: newPrice,
-                        pnl,
-                        trailingStopPrice: newTrailingStop,
-                    };
-                })
-            );
-        }, 5000); // Update every 5 seconds
-
-        return () => clearInterval(interval);
-    }, [isActive, currentStrategy]);
-
-    // Check stop-loss and take-profit levels
-    useEffect(() => {
-        if (!isActive || positions.length === 0) return;
-
-        const checkStopLossTakeProfit = () => {
-            positions.forEach(position => {
-                const effectiveStopLoss = position.trailingStopPrice || position.stopLoss;
-
-                // Check stop-loss
-                if (position.currentPrice <= effectiveStopLoss) {
-                    executeTrade(
-                        position.symbol,
-                        'SELL',
-                        position.currentPrice,
-                        1.0,
-                        'STOP_LOSS'
-                    );
-                    toast.error(`🛑 Stop-Loss déclenché pour ${position.symbol}`);
-                }
-                // Check take-profit
-                else if (position.currentPrice >= position.takeProfit) {
-                    executeTrade(
-                        position.symbol,
-                        'SELL',
-                        position.currentPrice,
-                        1.0,
-                        'TAKE_PROFIT'
-                    );
-                    toast.success(`🎯 Take-Profit atteint pour ${position.symbol}`);
-                }
-            });
-        };
-
-        const interval = setInterval(checkStopLossTakeProfit, 5000); // Check every 5 seconds
-        return () => clearInterval(interval);
-    }, [isActive, positions]);
-
-    // Fetch signals periodically when auto-trading is active
-    useEffect(() => {
-        if (!isActive || !autoTrade) return;
-
-        // Fetch immediately
-        fetchSignalsAndTrade();
-
-        // Then fetch every 30 seconds
-        const interval = setInterval(() => {
-            fetchSignalsAndTrade();
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [isActive, autoTrade, fetchSignalsAndTrade]);
-
-    // Calculate win rate whenever stats change
-    useEffect(() => {
-        if (stats.totalTrades > 0) {
-            const winRate = (stats.winningTrades / stats.totalTrades) * 100;
-            setStats(prev => ({ ...prev, winRate }));
-        }
-    }, [stats.totalTrades, stats.winningTrades]);
-
-    // Track portfolio value over time
-    useEffect(() => {
-        if (!isActive) return;
-
-        const interval = setInterval(() => {
-            setPortfolioHistory(prev => [
-                ...prev,
-                { time: Math.floor(Date.now() / 1000), value: totalValue }
-            ]);
-        }, 10000); // Update every 10 seconds
-
-        return () => clearInterval(interval);
-    }, [isActive, totalValue]);
-
-    const handleStartStop = () => {
-        if (!isActive) {
-            // Reset everything
-            setBalance(initialBalance);
-            setTrades([]);
-            setPositions([]);
-            setStats({
-                totalTrades: 0,
-                winningTrades: 0,
-                losingTrades: 0,
-                winRate: 0,
-            });
-            setPortfolioHistory([{ time: Math.floor(Date.now() / 1000), value: initialBalance }]);
-        }
-        setIsActive(!isActive);
+    const iconColors = {
+        cyan: 'text-cyan-400',
+        green: 'text-green-400',
+        red: 'text-red-400',
+        purple: 'text-purple-400',
+        orange: 'text-orange-400',
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <Link href="/" className="inline-flex items-center text-gray-400 hover:text-white mb-4 transition-colors">
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Retour au Dashboard
-                    </Link>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-4xl font-bold mb-2">
-                                <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                                    Live Simulation
-                                </span>
-                            </h1>
-                            <p className="text-gray-400">Testez vos stratégies en temps réel</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <Button
-                                variant={autoTrade ? "success" : "secondary"}
-                                size="md"
-                                onClick={() => setAutoTrade(!autoTrade)}
-                                disabled={!isActive}
-                                leftIcon={autoTrade ? <Activity className="w-4 h-4 animate-pulse" /> : <Pause className="w-4 h-4" />}
-                            >
-                                {autoTrade ? 'Trading Actif' : 'Trading En Pause'}
-                            </Button>
-                            <Button
-                                variant={isActive ? "danger" : "primary"}
-                                size="md"
-                                onClick={handleStartStop}
-                                leftIcon={isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                            >
-                                {isActive ? 'Arrêter' : 'Démarrer'}
-                            </Button>
-                        </div>
+        <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br ${colorClasses[color]} p-5 backdrop-blur-xl`}
+        >
+            {/* Glow effect */}
+            <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-30 bg-${color}-500`} />
+
+            <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-gray-400 font-medium">{title}</span>
+                    <div className={`p-2 rounded-lg bg-gray-800/50 ${iconColors[color]}`}>
+                        <Icon className="w-4 h-4" />
                     </div>
                 </div>
 
-                {/* Content - Only show when active */}
-                {!isActive ? (
-                    <div className="space-y-6">
-                        {/* Initial Balance Configuration */}
-                        <Card variant="glass">
-                            <CardContent className="p-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <div className="p-2 bg-cyan-500/10 rounded-lg">
-                                        <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-bold">Capital Initial</h3>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex-1">
-                                        <label className="block text-sm text-gray-400 mb-2">
-                                            Montant de départ (USD)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="100"
-                                            max="1000000"
-                                            step="100"
-                                            value={initialBalance}
-                                            onChange={(e) => setInitialBalance(Number(e.target.value))}
-                                            className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white font-bold text-xl focus:outline-none focus:border-cyan-500 transition-colors"
-                                        />
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setInitialBalance(5000)}
-                                            className="px-3 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
-                                        >
-                                            $5K
-                                        </button>
-                                        <button
-                                            onClick={() => setInitialBalance(10000)}
-                                            className="px-3 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
-                                        >
-                                            $10K
-                                        </button>
-                                        <button
-                                            onClick={() => setInitialBalance(50000)}
-                                            className="px-3 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
-                                        >
-                                            $50K
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="mt-4 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-                                    <p className="text-xs text-cyan-300">
-                                        💡 Avec la stratégie <span className="font-bold">{currentStrategy.name}</span>,
-                                        chaque trade risquera <span className="font-bold">${(initialBalance * currentStrategy.riskPerTrade).toFixed(2)}</span> ({(currentStrategy.riskPerTrade * 100).toFixed(0)}% du capital)
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
+                <div className="flex items-end gap-2">
+                    <span className="text-3xl font-bold text-white">
+                        <AnimatedValue value={value} prefix={prefix} suffix={suffix} />
+                    </span>
+                    {isPositive !== undefined && (
+                        <span className={`flex items-center text-sm ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                            {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                        </span>
+                    )}
+                </div>
 
-                        {/* Strategy Selection */}
-                        <TradingStrategy
-                            currentStrategy={currentStrategy}
-                            onStrategyChange={setCurrentStrategy}
-                        />
-                        <div className="text-center py-12">
-                            <p className="text-gray-400 text-lg mb-4">
-                                Sélectionnez une stratégie et cliquez sur "Démarrer" pour lancer la simulation
-                            </p>
-                            <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                    <span>Stop-Loss: {(currentStrategy.stopLoss * 100).toFixed(0)}%</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
-                                    <span>Take-Profit: {(currentStrategy.takeProfit * 100).toFixed(0)}%</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                    <span>Max Positions: {currentStrategy.maxPositions}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <motion.div
-                        initial="initial"
-                        animate="animate"
-                        variants={staggerContainer}
-                        className="space-y-6"
-                    >
-                        {/* Stats Cards */}
-                        <motion.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <Card variant="glass">
-                                <CardContent className="p-6">
-                                    <p className="text-sm text-gray-400 mb-2">Valeur Portfolio</p>
-                                    <p className="text-2xl font-bold">${totalValue.toFixed(2)}</p>
-                                    <p className={`text-sm ${totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                        {totalPnL >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card variant="glass">
-                                <CardContent className="p-6">
-                                    <p className="text-sm text-gray-400 mb-2">Liquidités</p>
-                                    <p className="text-2xl font-bold">${balance.toFixed(2)}</p>
-                                    <p className="text-sm text-gray-400">
-                                        {((balance / totalValue) * 100).toFixed(1)}% cash
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card variant="glass">
-                                <CardContent className="p-6">
-                                    <p className="text-sm text-gray-400 mb-2">Win Rate</p>
-                                    <p className="text-2xl font-bold">{stats.winRate.toFixed(1)}%</p>
-                                    <p className="text-sm text-gray-400">
-                                        {stats.winningTrades}W / {stats.losingTrades}L
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card variant="glass">
-                                <CardContent className="p-6">
-                                    <p className="text-sm text-gray-400 mb-2">Total Trades</p>
-                                    <p className="text-2xl font-bold">{stats.totalTrades}</p>
-                                    <p className="text-sm text-gray-400">
-                                        {positions.length} positions ouvertes
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-
-                        {/* Portfolio Performance Chart */}
-                        {portfolioHistory.length > 1 && (
-                            <motion.div variants={staggerItem}>
-                                <Card variant="gradient">
-                                    <CardHeader>
-                                        <CardTitle>Performance du Portfolio</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <PortfolioChart
-                                            data={portfolioHistory}
-                                            initialBalance={initialBalance}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        )}
-
-                        {/* Advanced Statistics */}
-                        {stats.totalTrades > 0 && (
-                            <motion.div variants={staggerItem}>
-                                <Card variant="glass">
-                                    <CardHeader>
-                                        <CardTitle>Statistiques Avancées</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {/* Sharpe Ratio */}
-                                            <div className="bg-gray-800/30 p-4 rounded-lg">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <BarChart3 className="w-4 h-4 text-blue-400" />
-                                                    <p className="text-xs text-gray-400">Sharpe Ratio</p>
-                                                </div>
-                                                <p className="text-xl font-bold text-cyan-400">
-                                                    {(() => {
-                                                        if (portfolioHistory.length < 2) return '0.00';
-                                                        const returns = [];
-                                                        for (let i = 1; i < portfolioHistory.length; i++) {
-                                                            const ret = (portfolioHistory[i].value - portfolioHistory[i - 1].value) / portfolioHistory[i - 1].value;
-                                                            returns.push(ret);
-                                                        }
-                                                        const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length;
-                                                        const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length;
-                                                        const stdDev = Math.sqrt(variance);
-                                                        const sharpe = stdDev === 0 ? 0 : (avgReturn / stdDev) * Math.sqrt(252);
-                                                        return sharpe.toFixed(2);
-                                                    })()}
-                                                </p>
-                                                <p className="text-xs text-gray-500 mt-1">Rendement/Risque</p>
-                                            </div>
-
-                                            {/* Max Drawdown */}
-                                            <div className="bg-gray-800/30 p-4 rounded-lg">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <TrendingDown className="w-4 h-4 text-red-400" />
-                                                    <p className="text-xs text-gray-400">Max Drawdown</p>
-                                                </div>
-                                                <p className="text-xl font-bold text-red-400">
-                                                    {(() => {
-                                                        if (portfolioHistory.length < 2) return '0.0%';
-                                                        let maxDD = 0;
-                                                        let peak = portfolioHistory[0].value;
-                                                        for (const point of portfolioHistory) {
-                                                            if (point.value > peak) peak = point.value;
-                                                            const dd = ((peak - point.value) / peak) * 100;
-                                                            if (dd > maxDD) maxDD = dd;
-                                                        }
-                                                        return maxDD.toFixed(1) + '%';
-                                                    })()}
-                                                </p>
-                                                <p className="text-xs text-gray-500 mt-1">Perte max</p>
-                                            </div>
-
-                                            {/* Profit Factor */}
-                                            <div className="bg-gray-800/30 p-4 rounded-lg">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Target className="w-4 h-4 text-purple-400" />
-                                                    <p className="text-xs text-gray-400">Profit Factor</p>
-                                                </div>
-                                                <p className="text-xl font-bold text-purple-400">
-                                                    {(() => {
-                                                        if (stats.losingTrades === 0) return stats.winningTrades > 0 ? '∞' : '0.00';
-                                                        const avgWin = stats.winningTrades > 0 ? totalPnL / stats.winningTrades : 0;
-                                                        const avgLoss = stats.losingTrades > 0 ? Math.abs(totalPnL) / stats.losingTrades : 1;
-                                                        const pf = avgLoss === 0 ? 0 : (stats.winningTrades * Math.abs(avgWin)) / (stats.losingTrades * Math.abs(avgLoss));
-                                                        return pf.toFixed(2);
-                                                    })()}
-                                                </p>
-                                                <p className="text-xs text-gray-500 mt-1">Gains/Pertes</p>
-                                            </div>
-
-                                            {/* ROI */}
-                                            <div className="bg-gray-800/30 p-4 rounded-lg">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <TrendingUp className="w-4 h-4 text-green-400" />
-                                                    <p className="text-xs text-gray-400">ROI</p>
-                                                </div>
-                                                <p className={`text-xl font-bold ${totalPnLPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(1)}%
-                                                </p>
-                                                <p className="text-xs text-gray-500 mt-1">Return on Investment</p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        )}
-
-                        {/* Positions and Trades */}
-                        <motion.div variants={staggerItem}>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Positions */}
-                                <Card variant="glass">
-                                    <CardHeader>
-                                        <div className="flex justify-between items-center">
-                                            <CardTitle>Positions Ouvertes</CardTitle>
-                                            <Badge variant="info">{positions.length}</Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {positions.length === 0 ? (
-                                            <div className="text-center text-gray-500 py-8">
-                                                Aucune position ouverte
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {positions.map((pos, idx) => (
-                                                    <div key={idx} className="bg-gray-800/50 p-4 rounded-lg">
-                                                        <div className="flex justify-between">
-                                                            <div>
-                                                                <p className="font-bold">{pos.symbol}</p>
-                                                                <p className="text-sm text-gray-400">Qté: {pos.quantity.toFixed(6)}</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <p className={pos.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
-                                                                    {pos.pnl >= 0 ? '+' : ''}${pos.pnl.toFixed(2)}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-
-                                {/* Trades */}
-                                <Card variant="glass">
-                                    <CardHeader>
-                                        <div className="flex justify-between items-center">
-                                            <CardTitle>Historique des Trades</CardTitle>
-                                            <Badge variant="default">{trades.length}</Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {trades.length === 0 ? (
-                                            <div className="text-center text-gray-500 py-8">
-                                                Aucun trade effectué
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {trades.slice(0, 10).map((trade) => (
-                                                    <div key={trade.id} className="bg-gray-800/30 p-3 rounded-lg flex justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <Badge variant={trade.type === 'BUY' ? 'success' : 'danger'}>
-                                                                {trade.type}
-                                                            </Badge>
-                                                            <div>
-                                                                <p className="font-bold">{trade.symbol}</p>
-                                                                <p className="text-xs text-gray-500">
-                                                                    {trade.timestamp.toLocaleTimeString()}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="font-mono">${trade.price.toFixed(2)}</p>
-                                                            <p className="text-xs text-gray-500">
-                                                                Conf: {(trade.confidence * 100).toFixed(0)}%
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </motion.div>
-                    </motion.div>
+                {subValue && (
+                    <p className="text-sm text-gray-400 mt-1">{subValue}</p>
                 )}
             </div>
+        </motion.div>
+    );
+};
+
+export default function TradingSimulation() {
+    const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+    const [session, setSession] = useState<TradingSession | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [currentStrategy, setCurrentStrategy] = useState<Strategy>(STRATEGIES[0]);
+    const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+    const [priceFlash, setPriceFlash] = useState<{ [key: string]: 'up' | 'down' | null }>({});
+
+    // Fetch session details
+    const fetchSessionDetails = useCallback(async () => {
+        if (!selectedSessionId) {
+            setSession(null);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/trading/sessions/${selectedSessionId}`);
+            if (response.ok) {
+                const data = await response.json();
+
+                // Check for price changes for flash effect
+                if (session?.positions) {
+                    const flashes: { [key: string]: 'up' | 'down' | null } = {};
+                    data.session.positions?.forEach((newPos: Position) => {
+                        const oldPos = session.positions?.find(p => p.symbol === newPos.symbol);
+                        if (oldPos && oldPos.currentPrice !== newPos.currentPrice) {
+                            flashes[newPos.symbol] = newPos.currentPrice > oldPos.currentPrice ? 'up' : 'down';
+                        }
+                    });
+                    setPriceFlash(flashes);
+                    setTimeout(() => setPriceFlash({}), 1000);
+                }
+
+                setSession(data.session);
+                setLastUpdate(new Date());
+            }
+        } catch (error) {
+            console.error('Error fetching session:', error);
+        }
+    }, [selectedSessionId, session?.positions]);
+
+    // Auto-refresh session details
+    useEffect(() => {
+        fetchSessionDetails();
+        const interval = setInterval(fetchSessionDetails, 5000);
+        return () => clearInterval(interval);
+    }, [selectedSessionId]); // Only depend on selectedSessionId to avoid infinite loop
+
+    // Toggle session active state
+    const toggleSession = async () => {
+        if (!session) return;
+
+        const endpoint = session.isActive ? 'stop' : 'start';
+        try {
+            const response = await fetch(
+                `${API_URL}/trading/sessions/${session.id}/${endpoint}`,
+                { method: 'POST' }
+            );
+
+            if (response.ok) {
+                toast.success(session.isActive ? 'Session stopped' : 'Session started!');
+                fetchSessionDetails();
+            }
+        } catch (error) {
+            console.error('Error toggling session:', error);
+            toast.error('Failed to update session');
+        }
+    };
+
+    // Toggle auto-trade
+    const toggleAutoTrade = async () => {
+        if (!session) return;
+
+        try {
+            const response = await fetch(
+                `${API_URL}/trading/sessions/${session.id}`,
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ autoTrade: !session.autoTrade })
+                }
+            );
+
+            if (response.ok) {
+                toast.success(session.autoTrade ? 'Auto-trade disabled' : 'Auto-trade enabled!');
+                fetchSessionDetails();
+            }
+        } catch (error) {
+            console.error('Error toggling auto-trade:', error);
+        }
+    };
+
+    // Calculate totals from session
+    const positions = session?.positions || [];
+    const trades = session?.trades || [];
+    const balance = session?.currentBalance || 0;
+    const totalValue = balance + positions.reduce((sum, p) => sum + (p.quantity * p.currentPrice), 0);
+    const totalPnL = session ? totalValue - session.initialBalance : 0;
+    const totalPnLPercent = session ? (totalPnL / session.initialBalance) * 100 : 0;
+    const unrealizedPnL = positions.reduce((sum, p) => sum + p.pnl, 0);
+    const avgWinRate = session?.stats?.winRate || 0;
+
+    return (
+        <main className="min-h-screen bg-[#0a0b0f] text-white">
+            {/* Animated background */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="relative z-10 p-6 lg:p-8">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8"
+                    >
+                        <Link href="/" className="inline-flex items-center text-gray-400 hover:text-cyan-400 mb-4 transition-all group">
+                            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                            Retour au Dashboard
+                        </Link>
+
+                        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+                            <div>
+                                <h1 className="text-4xl lg:text-5xl font-bold mb-2 flex items-center gap-3">
+                                    <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                                        Trading Bot
+                                    </span>
+                                    <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
+                                </h1>
+                                <div className="flex items-center gap-4 text-sm">
+                                    <span className="flex items-center gap-2 text-gray-400">
+                                        <Server className="w-4 h-4" />
+                                        24/7 Server-side Trading
+                                    </span>
+                                    <span className="flex items-center gap-2 text-gray-500">
+                                        <Clock className="w-4 h-4" />
+                                        Last update: {lastUpdate.toLocaleTimeString()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {session && (
+                                <div className="flex flex-wrap gap-3">
+                                    <Button
+                                        variant={session.autoTrade ? "success" : "secondary"}
+                                        size="lg"
+                                        onClick={toggleAutoTrade}
+                                        disabled={!session.isActive}
+                                        leftIcon={session.autoTrade ? <Zap className="w-5 h-5 animate-pulse" /> : <Pause className="w-5 h-5" />}
+                                        className={session.autoTrade ? 'shadow-lg shadow-green-500/25' : ''}
+                                    >
+                                        {session.autoTrade ? 'Auto-Trading' : 'Manual Mode'}
+                                    </Button>
+                                    <Button
+                                        variant={session.isActive ? "danger" : "primary"}
+                                        size="lg"
+                                        onClick={toggleSession}
+                                        leftIcon={session.isActive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                                        className={session.isActive ? 'shadow-lg shadow-red-500/25' : 'shadow-lg shadow-cyan-500/25'}
+                                    >
+                                        {session.isActive ? 'Stop Bot' : 'Start Bot'}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        {/* Session Manager - Left Column */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="lg:col-span-4"
+                        >
+                            <SessionManager
+                                selectedSessionId={selectedSessionId}
+                                onSelectSession={setSelectedSessionId}
+                                onSessionsChange={fetchSessionDetails}
+                            />
+                        </motion.div>
+
+                        {/* Session Details - Right Columns */}
+                        <div className="lg:col-span-8">
+                            {!selectedSessionId ? (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                >
+                                    <Card variant="glass" className="border-dashed border-2 border-gray-700">
+                                        <CardContent className="p-16 text-center">
+                                            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
+                                                <LineChart className="w-12 h-12 text-cyan-400" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold mb-3">Select a Trading Session</h3>
+                                            <p className="text-gray-400 max-w-md mx-auto">
+                                                Choose an existing session or create a new one to start automated trading with your preferred strategy.
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            ) : !session ? (
+                                <Card variant="glass">
+                                    <CardContent className="p-16 text-center">
+                                        <RefreshCw className="w-12 h-12 animate-spin mx-auto mb-4 text-cyan-400" />
+                                        <p className="text-gray-400">Loading session data...</p>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <motion.div
+                                    initial="initial"
+                                    animate="animate"
+                                    variants={staggerContainer}
+                                    className="space-y-6"
+                                >
+                                    {/* Stats Grid */}
+                                    <motion.div variants={staggerItem} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <StatCard
+                                            title="Portfolio Value"
+                                            value={totalValue}
+                                            prefix="$"
+                                            subValue={`${totalPnL >= 0 ? '+' : ''}${totalPnLPercent.toFixed(2)}% total`}
+                                            icon={Wallet}
+                                            color={totalPnL >= 0 ? 'green' : 'red'}
+                                            isPositive={totalPnL >= 0}
+                                        />
+                                        <StatCard
+                                            title="Cash Balance"
+                                            value={balance}
+                                            prefix="$"
+                                            subValue={`${totalValue > 0 ? ((balance / totalValue) * 100).toFixed(0) : 0}% available`}
+                                            icon={DollarSign}
+                                            color="cyan"
+                                        />
+                                        <StatCard
+                                            title="Win Rate"
+                                            value={avgWinRate}
+                                            suffix="%"
+                                            subValue={`${session.stats.winningTrades}W / ${session.stats.losingTrades}L`}
+                                            icon={Target}
+                                            color={avgWinRate >= 50 ? 'green' : 'orange'}
+                                        />
+                                        <StatCard
+                                            title="Total Trades"
+                                            value={session.stats.totalTrades}
+                                            subValue={`${positions.length} open positions`}
+                                            icon={BarChart3}
+                                            color="purple"
+                                        />
+                                    </motion.div>
+
+                                    {/* Session Info Banner */}
+                                    <motion.div variants={staggerItem}>
+                                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border border-gray-700/50 p-6">
+                                            {/* Animated gradient border */}
+                                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 opacity-50"
+                                                style={{ backgroundSize: '200% 100%', animation: 'shimmer 3s linear infinite' }} />
+
+                                            <div className="relative z-10">
+                                                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${session.strategy.name === 'High Gain'
+                                                                ? 'bg-gradient-to-br from-orange-500/30 to-red-500/30'
+                                                                : 'bg-gradient-to-br from-cyan-500/30 to-blue-500/30'
+                                                            }`}>
+                                                            {session.strategy.name === 'High Gain' ? (
+                                                                <Flame className="w-6 h-6 text-orange-400" />
+                                                            ) : (
+                                                                <Shield className="w-6 h-6 text-cyan-400" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-bold text-lg">{session.name}</h3>
+                                                            <p className="text-sm text-gray-400">Strategy: {session.strategy.name}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge
+                                                            variant={session.isActive ? "success" : "default"}
+                                                            className={session.isActive ? 'animate-pulse' : ''}
+                                                        >
+                                                            {session.isActive ? '🟢 Live' : '⚪ Stopped'}
+                                                        </Badge>
+                                                        {session.autoTrade && (
+                                                            <Badge variant="info" className="flex items-center gap-1">
+                                                                <Zap className="w-3 h-3" />
+                                                                Auto
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                                                    <div className="bg-gray-800/50 rounded-lg p-3">
+                                                        <span className="text-gray-400 block text-xs mb-1">Risk/Trade</span>
+                                                        <span className="font-bold text-cyan-400">{(session.strategy.riskPerTrade * 100).toFixed(1)}%</span>
+                                                    </div>
+                                                    <div className="bg-gray-800/50 rounded-lg p-3">
+                                                        <span className="text-gray-400 block text-xs mb-1">Stop-Loss</span>
+                                                        <span className="font-bold text-red-400">-{(session.strategy.stopLoss * 100).toFixed(1)}%</span>
+                                                    </div>
+                                                    <div className="bg-gray-800/50 rounded-lg p-3">
+                                                        <span className="text-gray-400 block text-xs mb-1">Take-Profit</span>
+                                                        <span className="font-bold text-green-400">+{(session.strategy.takeProfit * 100).toFixed(1)}%</span>
+                                                    </div>
+                                                    <div className="bg-gray-800/50 rounded-lg p-3">
+                                                        <span className="text-gray-400 block text-xs mb-1">Max Positions</span>
+                                                        <span className="font-bold">{session.strategy.maxPositions}</span>
+                                                    </div>
+                                                    <div className="bg-gray-800/50 rounded-lg p-3">
+                                                        <span className="text-gray-400 block text-xs mb-1">R/R Ratio</span>
+                                                        <span className="font-bold text-purple-400">1:{(session.strategy.takeProfit / session.strategy.stopLoss).toFixed(1)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                    {session.symbols.map(s => (
+                                                        <Badge key={s} variant="default" size="sm" className="bg-gray-800/50">
+                                                            {s.replace('USDT', '')}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Positions and Trades */}
+                                    <motion.div variants={staggerItem} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Open Positions */}
+                                        <Card variant="glass" className="overflow-hidden">
+                                            <CardHeader className="border-b border-gray-700/50">
+                                                <div className="flex justify-between items-center">
+                                                    <CardTitle className="flex items-center gap-2">
+                                                        <PieChart className="w-5 h-5 text-cyan-400" />
+                                                        Open Positions
+                                                    </CardTitle>
+                                                    <Badge variant="info" className="font-mono">{positions.length}</Badge>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="p-0">
+                                                {positions.length === 0 ? (
+                                                    <div className="text-center text-gray-500 py-12">
+                                                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center">
+                                                            <TrendingUp className="w-8 h-8 text-gray-600" />
+                                                        </div>
+                                                        No open positions
+                                                    </div>
+                                                ) : (
+                                                    <div className="divide-y divide-gray-700/50">
+                                                        {positions.map((pos) => (
+                                                            <motion.div
+                                                                key={pos.id}
+                                                                className={`p-4 transition-colors ${priceFlash[pos.symbol] === 'up' ? 'bg-green-500/10' :
+                                                                        priceFlash[pos.symbol] === 'down' ? 'bg-red-500/10' : ''
+                                                                    }`}
+                                                                layout
+                                                            >
+                                                                <div className="flex justify-between items-start">
+                                                                    <div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="font-bold text-lg">{pos.symbol.replace('USDT', '')}</span>
+                                                                            <span className="text-xs text-gray-500">/USDT</span>
+                                                                        </div>
+                                                                        <p className="text-sm text-gray-400 mt-1">
+                                                                            Qty: <span className="font-mono">{pos.quantity.toFixed(4)}</span>
+                                                                        </p>
+                                                                        <p className="text-xs text-gray-500 mt-1">
+                                                                            Entry: ${pos.averagePrice.toFixed(2)} →
+                                                                            <span className={`ml-1 font-bold ${pos.currentPrice > pos.averagePrice ? 'text-green-400' : 'text-red-400'
+                                                                                }`}>
+                                                                                ${pos.currentPrice.toFixed(2)}
+                                                                            </span>
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <p className={`text-xl font-bold ${pos.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                                            {pos.pnl >= 0 ? '+' : ''}${pos.pnl.toFixed(2)}
+                                                                        </p>
+                                                                        <div className="text-xs text-gray-500 mt-2 space-y-1">
+                                                                            <p>SL: <span className="text-red-400">${pos.stopLoss.toFixed(2)}</span></p>
+                                                                            <p>TP: <span className="text-green-400">${pos.takeProfit.toFixed(2)}</span></p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                {/* Progress bar to TP/SL */}
+                                                                <div className="mt-3 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className={`h-full transition-all ${pos.pnl >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                                                                        style={{
+                                                                            width: `${Math.min(100, Math.abs(pos.pnl / (pos.quantity * pos.averagePrice * (session?.strategy.takeProfit || 0.06))) * 100)}%`
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Trade History */}
+                                        <Card variant="glass" className="overflow-hidden">
+                                            <CardHeader className="border-b border-gray-700/50">
+                                                <div className="flex justify-between items-center">
+                                                    <CardTitle className="flex items-center gap-2">
+                                                        <Activity className="w-5 h-5 text-purple-400" />
+                                                        Trade History
+                                                    </CardTitle>
+                                                    <Badge variant="default" className="font-mono">{trades.length}</Badge>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="p-0">
+                                                {trades.length === 0 ? (
+                                                    <div className="text-center text-gray-500 py-12">
+                                                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center">
+                                                            <BarChart3 className="w-8 h-8 text-gray-600" />
+                                                        </div>
+                                                        No trades yet
+                                                    </div>
+                                                ) : (
+                                                    <div className="divide-y divide-gray-700/50 max-h-[400px] overflow-y-auto">
+                                                        <AnimatePresence>
+                                                            {trades.slice(0, 20).map((trade, index) => (
+                                                                <motion.div
+                                                                    key={trade.id}
+                                                                    initial={{ opacity: 0, x: -20 }}
+                                                                    animate={{ opacity: 1, x: 0 }}
+                                                                    transition={{ delay: index * 0.05 }}
+                                                                    className="p-4 hover:bg-gray-800/30 transition-colors"
+                                                                >
+                                                                    <div className="flex justify-between items-center">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${trade.type === 'BUY'
+                                                                                    ? 'bg-green-500/20 text-green-400'
+                                                                                    : 'bg-red-500/20 text-red-400'
+                                                                                }`}>
+                                                                                {trade.type === 'BUY' ? (
+                                                                                    <ArrowUpRight className="w-5 h-5" />
+                                                                                ) : (
+                                                                                    <ArrowDownRight className="w-5 h-5" />
+                                                                                )}
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="font-bold">{trade.symbol.replace('USDT', '')}</p>
+                                                                                <p className="text-xs text-gray-500">
+                                                                                    {new Date(trade.timestamp).toLocaleString()}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="text-right">
+                                                                            <p className="font-mono font-bold">${trade.price.toFixed(2)}</p>
+                                                                            {trade.type === 'SELL' && (
+                                                                                <p className={`text-sm font-bold ${trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                                                    {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toFixed(2)}
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </motion.div>
+                                                            ))}
+                                                        </AnimatePresence>
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* CSS for shimmer animation */}
+            <style jsx>{`
+                @keyframes shimmer {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+            `}</style>
         </main>
     );
 }

@@ -1,52 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Activity, TrendingUp } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/Card";
+import { ArrowUpRight, ArrowDownRight, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "./ui/Card";
 import { Badge } from "./ui/Badge";
 import { staggerContainer, staggerItem } from "../animations";
-
-interface SignalData {
-    symbol: string;
-    timeframe: string;
-    signal: string;
-    confidence: number;
-    price: number;
-    indicators: {
-        rsi: number;
-        macd: number;
-    };
-}
+import { useWatchlist } from "../hooks/useSignals";
 
 export function GridDashboard() {
-    const [signals, setSignals] = useState<SignalData[]>([]);
-    const [loading, setLoading] = useState(true);
     const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"];
+    // Using the hook we created. Assuming default 1h timeframe for the grid or we could lift this state up.
+    // For now, hardcoding 1h as per original component logic.
+    const { data: signals = [], isLoading } = useWatchlist(symbols, "1h", 30);
 
-    useEffect(() => {
-        const fetchSignals = async () => {
-            try {
-                const response = await fetch("http://localhost:8000/signals/multi", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ symbols, timeframe: "1h" }),
-                });
-                const data = await response.json();
-                setSignals(data.signals || []);
-            } catch (error) {
-                console.error("Error fetching grid signals:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchSignals();
-        const interval = setInterval(fetchSignals, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[1, 2, 3, 4].map((i) => (
@@ -81,21 +48,21 @@ export function GridDashboard() {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-2xl font-mono font-bold text-white">
-                                        ${signal.price.toFixed(2)}
+                                        ${signal.price?.toFixed(2)}
                                     </p>
                                     <Badge
                                         variant={
-                                            signal.signal.includes("BUY")
+                                            signal.signal?.includes("BUY")
                                                 ? "success"
-                                                : signal.signal.includes("SELL")
+                                                : signal.signal?.includes("SELL")
                                                     ? "danger"
                                                     : "default"
                                         }
                                         size="sm"
                                         className="mt-2"
                                     >
-                                        {signal.signal.includes("BUY") && <ArrowUpRight className="w-3 h-3" />}
-                                        {signal.signal.includes("SELL") && <ArrowDownRight className="w-3 h-3" />}
+                                        {signal.signal?.includes("BUY") && <ArrowUpRight className="w-3 h-3" />}
+                                        {signal.signal?.includes("SELL") && <ArrowDownRight className="w-3 h-3" />}
                                         {signal.signal}
                                     </Badge>
                                 </div>
@@ -107,20 +74,20 @@ export function GridDashboard() {
                                         Confiance
                                     </p>
                                     <p className="text-xl font-bold text-cyan-400">
-                                        {(signal.confidence * 100).toFixed(0)}%
+                                        {((signal.confidence || 0) * 100).toFixed(0)}%
                                     </p>
                                 </div>
                                 <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700/50">
                                     <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">RSI</p>
                                     <p
-                                        className={`text-xl font-bold ${signal.indicators.rsi > 70
+                                        className={`text-xl font-bold ${(signal.indicators?.rsi || 50) > 70
                                                 ? "text-red-400"
-                                                : signal.indicators.rsi < 30
+                                                : (signal.indicators?.rsi || 50) < 30
                                                     ? "text-green-400"
                                                     : "text-white"
                                             }`}
                                     >
-                                        {signal.indicators.rsi.toFixed(1)}
+                                        {signal.indicators?.rsi?.toFixed(1) || 'N/A'}
                                     </p>
                                 </div>
                             </div>

@@ -252,11 +252,23 @@ def predict_with_market_analysis(
     last = df.iloc[-1]
     price = last['close']
     
+    # Calculate volume ratio (current / average)
+    volume_ratio = None
+    if 'volume' in df.columns and len(df) > 20:
+        avg_volume = df['volume'].iloc[-20:].mean()
+        if avg_volume > 0:
+            volume_ratio = float(last['volume'] / avg_volume)
+    
     indicators = {
         'rsi': last.get('rsi', 50),
         'ema20': last.get('ema20', price),
         'atr': last.get('atr', price * 0.02),
-        'volatility': df['close'].pct_change().std() if len(df) > 1 else 0.02
+        'volatility': df['close'].pct_change().std() if len(df) > 1 else 0.02,
+        # New indicators for improved strategy
+        'adx': last.get('adx'),
+        'macd': last.get('macd'),
+        'stoch_k': last.get('stoch_k'),
+        'volume_ratio': volume_ratio
     }
     
     # Create market predictor

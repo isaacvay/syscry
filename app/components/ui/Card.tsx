@@ -1,9 +1,10 @@
 "use client";
 
 import React, { HTMLAttributes, forwardRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends HTMLMotionProps<"div"> {
+    children?: React.ReactNode;
     variant?: 'default' | 'glass' | 'gradient';
     hover?: boolean;
     glow?: boolean;
@@ -44,7 +45,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       `,
         };
 
-        const CardComponent = hover ? motion.div : 'div';
+        const CardComponent = hover ? motion.div : ('div' as any);
         const motionProps = hover
             ? {
                 whileHover: { y: -2, scale: 1.005 },
