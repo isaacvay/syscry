@@ -1745,3 +1745,107 @@ WHERE trading_sessions.is_active = ? AND trading_sessions.auto_trade = ?]
 2025-12-24 20:03:44,173 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
 2025-12-24 20:04:23,647 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
 2025-12-24 20:04:24,958 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:47:58,114 - crypto_ai - INFO - Database engine created with pool_size=10, max_overflow=20
+2026-01-12 16:47:59,036 - crypto_ai - WARNING - Configuration warnings:
+2026-01-12 16:47:59,036 - crypto_ai - WARNING -   ⚠️  REDDIT_CLIENT_ID/SECRET not set - Reddit sentiment disabled
+2026-01-12 16:47:59,038 - crypto_ai - INFO - ✅ Configuration validation passed
+2026-01-12 16:47:59,038 - crypto_ai - INFO - ✅ Sentiment analysis enabled with 2 API(s)
+2026-01-12 16:47:59,039 - crypto_ai - INFO - ============================================================
+2026-01-12 16:47:59,040 - crypto_ai - INFO - 🚀 Crypto AI Backend Starting
+2026-01-12 16:47:59,040 - crypto_ai - INFO - ============================================================
+2026-01-12 16:47:59,041 - crypto_ai - INFO - Frontend URL: http://localhost:3000
+2026-01-12 16:47:59,041 - crypto_ai - INFO - Database: sqlite:///./crypto_signals.db
+2026-01-12 16:47:59,042 - crypto_ai - INFO - Default Cryptos: BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, ADAUSDT, DOGEUSDT, AVAXUSDT, DOTUSDT, MATICUSDT, LINKUSDT, SHIBUSDT
+2026-01-12 16:47:59,042 - crypto_ai - INFO - Ensemble Models: True
+2026-01-12 16:47:59,043 - crypto_ai - INFO - Sentiment Analysis: True
+2026-01-12 16:47:59,043 - crypto_ai - INFO - ============================================================
+2026-01-12 16:47:59,091 - crypto_ai - INFO - Starting up... Preloading ML models
+2026-01-12 16:49:07,219 - crypto_ai - INFO - ✅ Preloaded model: BTCUSDT 1h
+2026-01-12 16:49:15,791 - crypto_ai - INFO - ✅ Preloaded model: ETHUSDT 1h
+2026-01-12 16:49:15,792 - crypto_ai - INFO - Preloaded 2 ML models successfully
+2026-01-12 16:49:16,107 - crypto_ai - INFO - 🚀 Background trading service started
+2026-01-12 16:49:16,118 - crypto_ai - INFO - ✅ Background trading service started
+2026-01-12 16:49:16,168 - crypto_ai - INFO - 🔔 Telegram alerts started (interval: 5min)
+2026-01-12 16:49:16,217 - crypto_ai - INFO - ✅ Telegram alert service started
+2026-01-12 16:49:16,780 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:49:17,180 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:49:24,238 - crypto_ai - INFO - 🛑 Background trading service stopped
+2026-01-12 16:49:24,267 - crypto_ai - INFO - Trading service stopped
+2026-01-12 16:49:24,316 - crypto_ai - INFO - 🔔 Telegram alert service stopped
+2026-01-12 16:49:24,488 - crypto_ai - INFO - Telegram alert service stopped
+2026-01-12 16:50:51,965 - crypto_ai - INFO - Database engine created with pool_size=10, max_overflow=20
+2026-01-12 16:50:52,715 - crypto_ai - WARNING - Configuration warnings:
+2026-01-12 16:50:52,716 - crypto_ai - WARNING -   ⚠️  REDDIT_CLIENT_ID/SECRET not set - Reddit sentiment disabled
+2026-01-12 16:50:52,716 - crypto_ai - INFO - ✅ Configuration validation passed
+2026-01-12 16:50:52,717 - crypto_ai - INFO - ✅ Sentiment analysis enabled with 2 API(s)
+2026-01-12 16:50:52,718 - crypto_ai - INFO - ============================================================
+2026-01-12 16:50:52,718 - crypto_ai - INFO - 🚀 Crypto AI Backend Starting
+2026-01-12 16:50:52,719 - crypto_ai - INFO - ============================================================
+2026-01-12 16:50:52,719 - crypto_ai - INFO - Frontend URL: http://localhost:3000
+2026-01-12 16:50:52,719 - crypto_ai - INFO - Database: sqlite:///./crypto_signals.db
+2026-01-12 16:50:52,720 - crypto_ai - INFO - Default Cryptos: BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, ADAUSDT, DOGEUSDT, AVAXUSDT, DOTUSDT, MATICUSDT, LINKUSDT, SHIBUSDT
+2026-01-12 16:50:52,720 - crypto_ai - INFO - Ensemble Models: True
+2026-01-12 16:50:52,721 - crypto_ai - INFO - Sentiment Analysis: True
+2026-01-12 16:50:52,721 - crypto_ai - INFO - ============================================================
+2026-01-12 16:50:52,774 - crypto_ai - INFO - Starting up... Preloading ML models
+2026-01-12 16:50:57,412 - crypto_ai - INFO - ✅ Preloaded model: BTCUSDT 1h
+2026-01-12 16:50:58,153 - crypto_ai - INFO - ✅ Preloaded model: ETHUSDT 1h
+2026-01-12 16:50:58,154 - crypto_ai - INFO - Preloaded 2 ML models successfully
+2026-01-12 16:50:58,168 - crypto_ai - INFO - 🚀 Background trading service started
+2026-01-12 16:50:58,178 - crypto_ai - INFO - ✅ Background trading service started
+2026-01-12 16:50:58,194 - crypto_ai - INFO - 🔔 Telegram alerts started (interval: 5min)
+2026-01-12 16:50:58,207 - crypto_ai - INFO - ✅ Telegram alert service started
+2026-01-12 16:50:58,774 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:50:58,826 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:51:05,006 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:51:05,141 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:51:09,888 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:51:09,927 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:51:37,908 - crypto_ai - INFO - Successfully fetched 1000 candles for SOLUSDT 1h
+2026-01-12 16:51:51,907 - crypto_ai - INFO - Successfully fetched 1000 candles for XRPUSDT 1h
+2026-01-12 16:51:58,257 - crypto_ai - INFO - Successfully fetched 1000 candles for ADAUSDT 1h
+2026-01-12 16:52:03,609 - crypto_ai - INFO - Successfully fetched 1000 candles for DOGEUSDT 1h
+2026-01-12 16:52:09,096 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:52:09,206 - crypto_ai - INFO - Successfully fetched 1000 candles for AVAXUSDT 1h
+2026-01-12 16:52:11,856 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:52:15,627 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:52:17,473 - crypto_ai - INFO - Successfully fetched 1000 candles for DOTUSDT 1h
+2026-01-12 16:52:30,613 - crypto_ai - INFO - Successfully fetched 1000 candles for MATICUSDT 1h
+2026-01-12 16:52:45,666 - crypto_ai - INFO - Successfully fetched 1000 candles for LINKUSDT 1h
+2026-01-12 16:52:50,765 - crypto_ai - INFO - Successfully fetched 1000 candles for SHIBUSDT 1h
+2026-01-12 16:52:59,142 - crypto_ai - INFO - 📤 Telegram alert sent: Normal=1, HighGain=1
+2026-01-12 16:53:26,941 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:53:30,343 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:53:32,808 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:54:41,610 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:54:44,261 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:54:46,867 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:55:55,105 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:55:57,808 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:56:00,252 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:57:09,052 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:57:11,621 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:57:14,226 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:58:09,182 - crypto_ai - INFO - Successfully fetched 1000 candles for SOLUSDT 1h
+2026-01-12 16:58:23,190 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:58:25,131 - crypto_ai - INFO - Successfully fetched 1000 candles for XRPUSDT 1h
+2026-01-12 16:58:27,638 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:58:31,965 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 16:58:36,206 - crypto_ai - INFO - Successfully fetched 1000 candles for ADAUSDT 1h
+2026-01-12 16:58:42,292 - crypto_ai - INFO - Successfully fetched 1000 candles for DOGEUSDT 1h
+2026-01-12 16:58:47,387 - crypto_ai - INFO - Successfully fetched 1000 candles for AVAXUSDT 1h
+2026-01-12 16:58:51,399 - crypto_ai - INFO - Successfully fetched 1000 candles for DOTUSDT 1h
+2026-01-12 16:58:57,699 - crypto_ai - INFO - Successfully fetched 1000 candles for MATICUSDT 1h
+2026-01-12 16:59:02,638 - crypto_ai - INFO - Successfully fetched 1000 candles for LINKUSDT 1h
+2026-01-12 16:59:06,557 - crypto_ai - INFO - Successfully fetched 1000 candles for SHIBUSDT 1h
+2026-01-12 16:59:47,243 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 16:59:50,219 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 16:59:53,248 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 17:01:03,000 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 17:01:06,559 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 17:01:09,237 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 17:02:18,675 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 17:02:21,497 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
+2026-01-12 17:02:24,323 - crypto_ai - INFO - Successfully fetched 1000 candles for BNBUSDT 1h
+2026-01-12 17:03:33,225 - crypto_ai - INFO - Successfully fetched 1000 candles for BTCUSDT 1h
+2026-01-12 17:03:35,757 - crypto_ai - INFO - Successfully fetched 1000 candles for ETHUSDT 1h
