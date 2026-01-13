@@ -48,7 +48,9 @@ interface SessionManagerProps {
     onSessionsChange?: () => void;
 }
 
-const API_URL = 'http://localhost:8000';
+import { API_CONFIG } from '../utils/config';
+
+const API_URL = API_CONFIG.BASE_URL;
 
 export default function SessionManager({
     selectedSessionId,

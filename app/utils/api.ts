@@ -3,6 +3,8 @@
  * Provides resilient API calls with exponential backoff
  */
 
+import { API_CONFIG } from './config';
+
 interface RetryOptions {
     maxRetries?: number;
     initialDelay?: number;
@@ -128,7 +130,7 @@ export class ApiClient {
     private defaultRetryOptions: RetryOptions;
 
     constructor(
-        baseUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+        baseUrl: string = API_CONFIG.BASE_URL,
         retryOptions: RetryOptions = {}
     ) {
         this.baseUrl = baseUrl;

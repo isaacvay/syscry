@@ -16,6 +16,7 @@ import TradingStrategy, { STRATEGIES, Strategy } from '../components/TradingStra
 import SessionManager from '../components/SessionManager';
 import { staggerContainer, staggerItem } from '../animations';
 import toast from 'react-hot-toast';
+import { API_CONFIG } from '../utils/config';
 
 interface Trade {
     id: number;
@@ -64,7 +65,7 @@ interface TradingSession {
     updatedAt: string;
 }
 
-const API_URL = 'http://localhost:8000';
+const API_URL = API_CONFIG.BASE_URL;
 
 // Animated counter component
 const AnimatedValue = ({ value, prefix = '', suffix = '', decimals = 2 }: { value: number; prefix?: string; suffix?: string; decimals?: number }) => {
@@ -415,8 +416,8 @@ export default function TradingSimulation() {
                                                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${session.strategy.name === 'High Gain'
-                                                                ? 'bg-gradient-to-br from-orange-500/30 to-red-500/30'
-                                                                : 'bg-gradient-to-br from-cyan-500/30 to-blue-500/30'
+                                                            ? 'bg-gradient-to-br from-orange-500/30 to-red-500/30'
+                                                            : 'bg-gradient-to-br from-cyan-500/30 to-blue-500/30'
                                                             }`}>
                                                             {session.strategy.name === 'High Gain' ? (
                                                                 <Flame className="w-6 h-6 text-orange-400" />
@@ -507,7 +508,7 @@ export default function TradingSimulation() {
                                                             <motion.div
                                                                 key={pos.id}
                                                                 className={`p-4 transition-colors ${priceFlash[pos.symbol] === 'up' ? 'bg-green-500/10' :
-                                                                        priceFlash[pos.symbol] === 'down' ? 'bg-red-500/10' : ''
+                                                                    priceFlash[pos.symbol] === 'down' ? 'bg-red-500/10' : ''
                                                                     }`}
                                                                 layout
                                                             >
@@ -587,8 +588,8 @@ export default function TradingSimulation() {
                                                                     <div className="flex justify-between items-center">
                                                                         <div className="flex items-center gap-3">
                                                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${trade.type === 'BUY'
-                                                                                    ? 'bg-green-500/20 text-green-400'
-                                                                                    : 'bg-red-500/20 text-red-400'
+                                                                                ? 'bg-green-500/20 text-green-400'
+                                                                                : 'bg-red-500/20 text-red-400'
                                                                                 }`}>
                                                                                 {trade.type === 'BUY' ? (
                                                                                     <ArrowUpRight className="w-5 h-5" />

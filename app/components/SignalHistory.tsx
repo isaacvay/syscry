@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Clock, Download } from "lucide-react";
+import { API_CONFIG } from "../utils/config";
+
+
 
 interface HistoricalSignal {
     id: number;
@@ -29,7 +32,7 @@ export function SignalHistory({ symbol, limit = 20 }: SignalHistoryProps) {
                 if (symbol) params.append("symbol", symbol);
                 params.append("limit", limit.toString());
 
-                const response = await fetch(`http://localhost:8000/signals/history?${params}`);
+                const response = await fetch(`${API_CONFIG.BASE_URL}/signals/history?${params}`);
                 const data = await response.json();
                 setHistory(data.signals || []);
             } catch (error) {

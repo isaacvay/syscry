@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Save, Check, Key, Settings as SettingsIcon, Bell } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
+import { API_CONFIG } from "../utils/config";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -36,12 +37,12 @@ export default function SettingsPage() {
     const [availableTimeframes, setAvailableTimeframes] = useState<string[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:8000/settings')
+        fetch(`${API_CONFIG.BASE_URL}/settings`)
             .then(res => res.json())
             .then(data => setSettings(data))
             .catch(err => console.error('Error loading settings:', err));
 
-        fetch('http://localhost:8000/cryptos/list')
+        fetch(`${API_CONFIG.BASE_URL}/cryptos/list`)
             .then(res => res.json())
             .then(data => {
                 setAvailableCryptos(data.cryptos || []);
@@ -52,7 +53,7 @@ export default function SettingsPage() {
 
     const handleSave = async () => {
         try {
-            const response = await fetch('http://localhost:8000/settings', {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/settings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

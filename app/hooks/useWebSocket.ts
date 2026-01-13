@@ -3,6 +3,9 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import toast from 'react-hot-toast';
+import { API_CONFIG } from '../utils/config';
+
+
 
 export interface SignalData {
     symbol: string;
@@ -38,7 +41,7 @@ export function useWebSocketSignals(options: UseWebSocketSignalsOptions = {}) {
     const previousSignalsRef = useRef<Map<string, string>>(new Map());
     const reconnectAttemptsRef = useRef(0);
 
-    const WS_URL = 'ws://localhost:8000/ws/signals';
+    const WS_URL = API_CONFIG.WS_URL;
 
     // Exponential backoff for reconnection
     const getReconnectInterval = useCallback(() => {

@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { SignalData } from './useWebSocket'; // Assuming SignalData type is exported from here or needs to be moved
+import { SignalData } from './useWebSocket';
+import { API_CONFIG } from '../utils/config';
 
 // API base URL
-const API_URL = 'http://localhost:8000';
+const API_URL = API_CONFIG.BASE_URL;
 
 export interface SignalResponse {
     signal: string;

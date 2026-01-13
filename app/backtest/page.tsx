@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Play, TrendingUp, TrendingDown, Activity, BarChart3 } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
+import { API_CONFIG } from "../utils/config";
 import { Button } from "../components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -34,7 +35,7 @@ export default function BacktestPage() {
     const [availableCryptos, setAvailableCryptos] = useState<string[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:8000/cryptos/list')
+        fetch(`${API_CONFIG.BASE_URL}/cryptos/list`)
             .then(res => res.json())
             .then(data => setAvailableCryptos(data.cryptos || ["BTCUSDT"]))
             .catch(err => console.error(err));
@@ -44,7 +45,7 @@ export default function BacktestPage() {
         setLoading(true);
         setResult(null);
         try {
-            const response = await fetch(`http://localhost:8000/backtest?symbol=${symbol}&days=${days}`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/backtest?symbol=${symbol}&days=${days}`, {
                 method: 'POST'
             });
             if (!response.ok) throw new Error('Erreur backtest');
