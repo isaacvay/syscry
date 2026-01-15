@@ -94,16 +94,22 @@ def predict_direction(df: pd.DataFrame, symbol="BTCUSDT", interval="1h",
                 
                 # Prepare features
                 df_features = create_features(df.copy())
+                
+                # Drop 'target' column if it exists in the DataFrame
+                if 'target' in df_features.columns:
+                    df_features = df_features.drop(columns=['target'])
+                
                 feature_names = model_data['feature_names']
                 
-                # Filter out target if present
+                # Filter out target if present in saved feature names
                 feature_names = [f for f in feature_names if f != 'target']
                 
                 # Handle missing features BEFORE selection
                 for col in feature_names:
                     if col not in df_features.columns:
                         df_features[col] = 0
-                        
+                
+                # Select only the features the model expects        
                 X = df_features[feature_names].iloc[[-1]]
                 
                 # Predict with ensemble
@@ -113,9 +119,14 @@ def predict_direction(df: pd.DataFrame, symbol="BTCUSDT", interval="1h",
             else:
                 # Single model prediction
                 df_features = create_features(df.copy())
+                
+                # Drop 'target' column if it exists in the DataFrame
+                if 'target' in df_features.columns:
+                    df_features = df_features.drop(columns=['target'])
+                
                 feature_names = model_data['feature_names']
                 
-                # Filter out target if present
+                # Filter out target if present in saved feature names
                 feature_names = [f for f in feature_names if f != 'target']
                 
                 # Handle missing features BEFORE selection

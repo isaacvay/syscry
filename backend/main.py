@@ -86,12 +86,24 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS - Restricted to frontend URL
+# CORS - Allow frontend URLs (development + production)
+# Build dynamic origins list
+cors_origins = [
+    settings.frontend_url,
+    "http://localhost:3000",
+    "https://syscry-production.up.railway.app",  # Backend (same origin)
+]
+# Add Railway dynamic frontend URL patterns
+if "railway.app" in settings.frontend_url:
+    cors_origins.append(settings.frontend_url)
+# Also allow any railway.app subdomain for flexibility
+cors_origins.append("https://*.up.railway.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:3000"],
+    allow_origins=["*"],  # Allow all origins in production (Railway adds its own security)
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 

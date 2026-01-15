@@ -20,6 +20,7 @@ Since your project is a **monorepo** containing both a Next.js frontend (root) a
     *   `BINANCE_SECRET_KEY`
     *   `TELEGRAM_BOT_TOKEN`
     *   `TELEGRAM_CHAT_ID`
+    *   `FRONTEND_URL` (set to your frontend Railway URL, e.g., `https://your-frontend.up.railway.app`)
     *   Any others needed.
 6.  Railway should automatically detect the `Procfile` I just added (`web: uvicorn main:app --host 0.0.0.0 --port $PORT`) and start the service.
 7.  Once deployed, go to **Settings** -> **Networking** and initialize a domain (e.g., `syscry-backend.up.railway.app`).

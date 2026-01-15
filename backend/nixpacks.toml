@@ -1,0 +1,12 @@
+# Nixpacks configuration for Railway
+# This ensures libgomp is installed for XGBoost support
+
+[phases.setup]
+nixPkgs = ["libgomp", "gcc"]
+aptPkgs = ["libgomp1"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
+[start]
+cmd = "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
