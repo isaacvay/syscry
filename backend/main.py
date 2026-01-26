@@ -114,36 +114,45 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compress responses > 1K
 # Startup event - Preload ML models
 @app.on_event("startup")
 async def startup_event():
-    """Preload ML models on startup to reduce first-request latency"""
-    logger.info("Starting up... Preloading ML models")
+    """Start services and trigger background model loading"""
+    logger.info("Starting up... triggering background tasks")
     
-    try:
-        from model.predict import load_model
-        
-        # Preload models for default cryptos and timeframes
-        preload_symbols = settings.default_cryptos[:2]  # Preload top 2 to save startup time
-        preload_timeframes = ["1h"]  # Most common timeframe
-        
-        loaded_count = 0
-        for symbol in preload_symbols:
-            for timeframe in preload_timeframes:
-                try:
-                    model_data = load_model(symbol, timeframe, use_ensemble=settings.use_ensemble)
-                    if model_data:
-                        loaded_count += 1
-                        logger.info(f"✅ Preloaded model: {symbol} {timeframe}")
-                except Exception as e:
-                    logger.warning(f"Could not preload model for {symbol} {timeframe}: {e}")
-        
-        logger.info(f"Preloaded {loaded_count} ML models successfully")
-        
-        # Update Prometheus gauge
-        if METRICS_AVAILABLE:
-            update_ml_models_gauge(loaded_count)
-        
-    except Exception as e:
-        logger.error(f"Error during model preloading: {e}")
-        logger.warning("Continuing without preloaded models...")
+    # Define preloading task
+    async def preload_models():
+        logger.info("⏳ Starting background model preloading...")
+        try:
+            from model.predict import load_model
+            
+            # Preload models for default cryptos and timeframes
+            preload_symbols = settings.default_cryptos[:2]  # Preload top 2 to save startup time
+            preload_timeframes = ["1h"]  # Most common timeframe
+            
+            loaded_count = 0
+            for symbol in preload_symbols:
+                for timeframe in preload_timeframes:
+                    try:
+                        # Run synchronous load_model in thread pool to avoid blocking event loop
+                        model_data = await asyncio.to_thread(
+                            load_model, symbol, timeframe, use_ensemble=settings.use_ensemble
+                        )
+                        if model_data:
+                            loaded_count += 1
+                            logger.info(f"✅ Preloaded model: {symbol} {timeframe}")
+                    except Exception as e:
+                        logger.warning(f"Could not preload model for {symbol} {timeframe}: {e}")
+            
+            logger.info(f"Background preloading complete: {loaded_count} models loaded")
+            
+            # Update Prometheus gauge
+            if METRICS_AVAILABLE:
+                update_ml_models_gauge(loaded_count)
+                
+        except Exception as e:
+            logger.error(f"Error during background model preloading: {e}")
+
+    # Launch background task
+    asyncio.create_task(preload_models())
+
     
     # Start background trading service
     try:
