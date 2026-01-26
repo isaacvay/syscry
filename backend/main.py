@@ -101,7 +101,7 @@ cors_origins.append("https://*.up.railway.app")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in production (Railway adds its own security)
+    allow_origins=cors_origins,  # Use defined origins list
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
