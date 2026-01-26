@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\ml\market_predictor.py
+# hypothesis_version: 6.151.2
+
+[-0.02, 0.0, 0.02, 0.1, 0.25, 0.35, 0.45, 0.5, 0.55, 0.65, 0.8, 1.0, 1.2, 1.5, 2.0, 10.0, 10000.0, 'BUY', 'HOLD', 'SELL', 'STRONG_BUY', 'STRONG_SELL', 'adx', 'atr', 'capital_required', 'confidence', 'ema20', 'leverage', 'macd', 'max_leverage', 'min_confidence', 'min_leverage', 'position_size', 'probability', 'quantity', 'risk_amount', 'risk_per_trade', 'risk_reward_ratio', 'rsi', 'sentiment', 'signal', 'stoch_k', 'stop_distance', 'stop_loss', 'take_profit', 'volatility', 'volume_ratio']

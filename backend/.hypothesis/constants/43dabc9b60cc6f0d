@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\dependency_manager.py
+# hypothesis_version: 6.151.2
+
+[0.0, 'Install with:\n', 'articles', 'confidence', 'joblib', 'ml_prediction', 'news_api', 'news_sentiment', 'newsapi', 'newsapi-python', 'numpy', 'pandas', 'pip install joblib', 'pip install numpy', 'pip install pandas', 'pip install praw', 'pip install requests', 'pip install ta', 'pip install tweepy', 'posts', 'praw', 'reddit_api', 'reddit_sentiment', 'requests', 'scikit-learn', 'sentiment', 'sentiment_analysis', 'sentiment_score', 'sklearn', 'ta', 'technical_analysis', 'textblob', 'tweepy', 'tweets', 'twitter_api', 'twitter_sentiment']

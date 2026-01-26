@@ -23,10 +23,10 @@ class Settings(BaseSettings):
     # Cache Configuration
     cache_ttl: int = 60  # seconds
     
-    # Signal Thresholds
-    rsi_oversold: int = 40
-    rsi_overbought: int = 60
-    confidence_threshold: float = 0.55
+    # Signal Thresholds - Updated for better accuracy
+    rsi_oversold: int = 30  # Changed from 40 to 30 for better oversold detection
+    rsi_overbought: int = 70  # Changed from 60 to 70 for better overbought detection
+    confidence_threshold: float = 0.55  # Minimum confidence for non-HOLD signals
     
     # Database
     database_url: str = "sqlite:///./crypto_signals.db"

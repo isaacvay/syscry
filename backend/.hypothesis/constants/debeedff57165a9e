@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\ml\sentiment_features.py
+# hypothesis_version: 6.151.2
+
+[-0.2, 0.0, 0.2, 0.5, 'ADA', 'ADAUSDT', 'BNB', 'BNBUSDT', 'BTC', 'BTCUSDT', 'Binance Coin', 'Bitcoin', 'Cardano', 'DOGE', 'DOGEUSDT', 'DOT', 'DOTUSDT', 'Dogecoin', 'ETH', 'ETHUSDT', 'Ethereum', 'NEGATIVE', 'NEUTRAL', 'POSITIVE', 'Polkadot', 'Ripple', 'SOL', 'SOLUSDT', 'Solana', 'XRP', 'XRPUSDT', 'aggregated_sentiment', 'avg_sentiment', 'news', 'news_positive_ratio', 'news_sentiment', 'positive_ratio', 'reddit', 'reddit_sentiment', 'sentiment_score', 'source_count', 'sources', 'twitter', 'twitter_sentiment']

@@ -9,11 +9,14 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from prometheus_fastapi_instrumentator import Instrumentator
 import asyncio
+import time
+from datetime import datetime
 
 from services.signal_service import generate_signal_service as generate_signal
 from database import get_db, save_signal, get_signal_history, Signal
 from config import settings
-from logger import logger
+from logger_enhanced import logger, log_exception, log_api_call, performance_log
+from dependency_manager import dependency_manager
 
 # Import custom metrics
 try:
@@ -27,7 +30,7 @@ except ImportError:
     logger.warning("Custom metrics not available")
     METRICS_AVAILABLE = False
 
-# Import constants and exceptions
+# Import constants and exceptions with enhanced error handling
 try:
     from constants import (
         RATE_LIMIT_SIGNAL, RATE_LIMIT_MULTI_SIGNAL, RATE_LIMIT_BACKTEST,
@@ -36,7 +39,7 @@ try:
     )
     from exceptions import (
         BinanceAPIError, InsufficientDataError, DataQualityError,
-        ModelNotFoundError, PredictionError, DatabaseError
+        ModelNotFoundError, PredictionError, DatabaseError, ConfigurationError
     )
 except ImportError:
     # Fallback values
@@ -56,8 +59,9 @@ except ImportError:
     class ModelNotFoundError(Exception): pass
     class PredictionError(Exception): pass
     class DatabaseError(Exception): pass
+    class ConfigurationError(Exception): pass
 
-# Validate configuration on startup
+# Validate configuration and dependencies on startup
 try:
     from config_validator import validate_required_settings, print_startup_info
     validate_required_settings()
@@ -68,6 +72,24 @@ except ValueError as e:
     logger.error(f"Configuration validation failed: {e}")
     logger.error("Please check your .env file and backend/.env.example")
     raise
+
+# Validate dependencies
+dependency_status = dependency_manager.validate_dependencies()
+if dependency_status.missing:
+    logger.warning(f"Missing optional dependencies: {', '.join(dependency_status.missing)}")
+    for dep in dependency_status.missing:
+        if dep in ["pandas", "numpy", "ta", "joblib"]:
+            logger.error(f"Critical dependency missing: {dep}")
+            raise ImportError(f"Critical dependency missing: {dep}")
+
+# Global metrics for monitoring
+signal_generation_metrics = {
+    "total_requests": 0,
+    "successful_requests": 0,
+    "failed_requests": 0,
+    "average_response_time": 0.0,
+    "last_reset": datetime.utcnow()
+}
 
 # Initialize FastAPI with metadata
 app = FastAPI(
@@ -188,46 +210,49 @@ async def shutdown_event():
     except Exception as e:
         logger.error(f"Error stopping Telegram alert service: {e}")
 
-# Custom exception handlers
+# Enhanced exception handlers with structured logging
 @app.exception_handler(BinanceAPIError)
 async def binance_error_handler(request: Request, exc: BinanceAPIError):
-    logger.error(f"Binance API error: {exc}")
+    log_exception(exc, {"endpoint": str(request.url)}, "Binance API call")
     return JSONResponse(
         status_code=503,
         content={
             "error": "Binance service temporarily unavailable",
             "detail": "Please try again in a few moments",
-            "type": "BinanceAPIError"
+            "type": "BinanceAPIError",
+            "error_code": getattr(exc, 'error_code', None)
         }
     )
 
 @app.exception_handler(InsufficientDataError)
 async def insufficient_data_handler(request: Request, exc: InsufficientDataError):
-    logger.warning(f"Insufficient data: {exc}")
+    log_exception(exc, {"endpoint": str(request.url)}, "Data validation")
     return JSONResponse(
         status_code=400,
         content={
             "error": "Insufficient data for analysis",
             "detail": str(exc),
-            "type": "InsufficientDataError"
+            "type": "InsufficientDataError",
+            "context": getattr(exc, 'context', {})
         }
     )
 
 @app.exception_handler(DataQualityError)
 async def data_quality_handler(request: Request, exc: DataQualityError):
-    logger.error(f"Data quality error: {exc}")
+    log_exception(exc, {"endpoint": str(request.url)}, "Data quality validation")
     return JSONResponse(
         status_code=400,
         content={
             "error": "Data quality issue",
             "detail": str(exc),
-            "type": "DataQualityError"
+            "type": "DataQualityError",
+            "context": getattr(exc, 'context', {})
         }
     )
 
 @app.exception_handler(DatabaseError)
 async def database_error_handler(request: Request, exc: DatabaseError):
-    logger.error(f"Database error: {exc}")
+    log_exception(exc, {"endpoint": str(request.url)}, "Database operation")
     return JSONResponse(
         status_code=500,
         content={
@@ -237,10 +262,23 @@ async def database_error_handler(request: Request, exc: DatabaseError):
         }
     )
 
-# Global exception handler (fallback)
+@app.exception_handler(ConfigurationError)
+async def configuration_error_handler(request: Request, exc: ConfigurationError):
+    log_exception(exc, {"endpoint": str(request.url)}, "Configuration validation")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Configuration error",
+            "detail": str(exc),
+            "type": "ConfigurationError",
+            "context": getattr(exc, 'context', {})
+        }
+    )
+
+# Global exception handler (fallback) with enhanced logging
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.exception(f"Unhandled exception: {exc}")  # This logs the full traceback
+    log_exception(exc, {"endpoint": str(request.url), "method": request.method}, "Unhandled exception")
     return JSONResponse(
         status_code=500,
         content={
@@ -301,18 +339,19 @@ def health_check():
 @app.get("/health/detailed", tags=["Health"])
 async def detailed_health_check():
     """
-    Detailed health check - verifies all critical components
+    Enhanced health check - verifies all critical components with dependency status
     
     Returns:
-        dict: Health status of database, Binance API, and ML models
+        dict: Comprehensive health status including dependencies and performance metrics
     """
-    from datetime import datetime
     import requests
     
     health_status = {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "components": {}
+        "components": {},
+        "dependencies": {},
+        "metrics": {}
     }
     
     # Check Database
@@ -331,24 +370,29 @@ async def detailed_health_check():
             "status": "unhealthy",
             "message": f"Database error: {str(e)}"
         }
-        logger.error(f"Health check - Database error: {e}")
+        log_exception(e, operation="Health check - Database")
     
-    # Check Binance API
+    # Check Binance API with timeout
     try:
+        start_time = time.time()
         response = requests.get(
             "https://api.binance.com/api/v3/ping",
             timeout=5
         )
+        api_duration = (time.time() - start_time) * 1000
+        
         if response.status_code == 200:
             health_status["components"]["binance_api"] = {
                 "status": "healthy",
-                "message": "Binance API reachable"
+                "message": "Binance API reachable",
+                "response_time_ms": round(api_duration, 2)
             }
         else:
             health_status["status"] = "degraded"
             health_status["components"]["binance_api"] = {
                 "status": "degraded",
-                "message": f"Binance API returned status {response.status_code}"
+                "message": f"Binance API returned status {response.status_code}",
+                "response_time_ms": round(api_duration, 2)
             }
     except Exception as e:
         health_status["status"] = "degraded"
@@ -356,7 +400,7 @@ async def detailed_health_check():
             "status": "unhealthy",
             "message": f"Binance API unreachable: {str(e)}"
         }
-        logger.error(f"Health check - Binance API error: {e}")
+        log_exception(e, operation="Health check - Binance API")
     
     # Check ML Models
     try:
@@ -367,7 +411,8 @@ async def detailed_health_check():
             health_status["components"]["ml_models"] = {
                 "status": "healthy",
                 "message": f"{loaded_models} models loaded in cache",
-                "loaded_models": loaded_models
+                "loaded_models": loaded_models,
+                "model_list": list(_model_cache.keys())
             }
         else:
             health_status["components"]["ml_models"] = {
@@ -394,44 +439,140 @@ async def detailed_health_check():
             "message": f"Cache error: {str(e)}"
         }
     
+    # Add dependency status
+    health_status["dependencies"] = {
+        "available": dependency_manager.status.available,
+        "missing": dependency_manager.status.missing,
+        "features": {
+            "sentiment_analysis": dependency_manager.is_feature_available("sentiment_analysis"),
+            "ml_prediction": dependency_manager.is_feature_available("ml_prediction"),
+            "technical_analysis": dependency_manager.is_feature_available("technical_analysis")
+        }
+    }
+    
+    # Add performance metrics
+    health_status["metrics"] = {
+        "signal_generation": {
+            "total_requests": signal_generation_metrics["total_requests"],
+            "success_rate": (
+                signal_generation_metrics["successful_requests"] / 
+                max(signal_generation_metrics["total_requests"], 1)
+            ),
+            "average_response_time_ms": signal_generation_metrics["average_response_time"],
+            "last_reset": signal_generation_metrics["last_reset"].isoformat() + "Z"
+        }
+    }
+    
     return health_status
 
 @app.get("/metrics/summary", tags=["Monitoring"])
 async def metrics_summary():
     """
-    Get a summary of custom application metrics
+    Get a comprehensive summary of application metrics and performance
     
     Returns:
-        dict: Summary of key metrics
+        dict: Detailed metrics including performance, dependencies, and system status
     """
     try:
         from model.predict import _model_cache
         from cache import cache
         
+        # Calculate uptime
+        uptime_seconds = (datetime.utcnow() - signal_generation_metrics["last_reset"]).total_seconds()
+        
         summary = {
+            "system": {
+                "uptime_seconds": uptime_seconds,
+                "uptime_human": f"{uptime_seconds // 3600:.0f}h {(uptime_seconds % 3600) // 60:.0f}m",
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            },
             "ml_models": {
                 "loaded": len(_model_cache),
-                "models": list(_model_cache.keys()) if _model_cache else []
+                "models": list(_model_cache.keys()) if _model_cache else [],
+                "cache_size": len(_model_cache)
             },
             "cache": {
                 "type": "in-memory",
                 "available": True
             },
+            "signal_generation": {
+                "total_requests": signal_generation_metrics["total_requests"],
+                "successful_requests": signal_generation_metrics["successful_requests"],
+                "failed_requests": signal_generation_metrics["failed_requests"],
+                "success_rate": (
+                    signal_generation_metrics["successful_requests"] / 
+                    max(signal_generation_metrics["total_requests"], 1)
+                ),
+                "average_response_time_ms": round(signal_generation_metrics["average_response_time"], 2),
+                "requests_per_hour": (
+                    signal_generation_metrics["total_requests"] / max(uptime_seconds / 3600, 1/3600)
+                )
+            },
+            "dependencies": {
+                "available_count": sum(dependency_manager.status.available.values()),
+                "total_count": len(dependency_manager.status.available),
+                "missing": dependency_manager.status.missing,
+                "features": {
+                    "sentiment_analysis": dependency_manager.is_feature_available("sentiment_analysis"),
+                    "ml_prediction": dependency_manager.is_feature_available("ml_prediction"),
+                    "technical_analysis": dependency_manager.is_feature_available("technical_analysis")
+                }
+            },
+            "configuration": {
+                "rsi_thresholds": {
+                    "oversold": settings.rsi_oversold,
+                    "overbought": settings.rsi_overbought
+                },
+                "confidence_threshold": settings.confidence_threshold,
+                "sentiment_enabled": settings.sentiment_enabled,
+                "use_ensemble": settings.use_ensemble
+            },
             "endpoints": {
                 "prometheus": "/metrics",
                 "health_simple": "/health",
                 "health_detailed": "/health/detailed",
-                "api_docs": "/docs"
+                "api_docs": "/docs",
+                "metrics_summary": "/metrics/summary"
             }
         }
         
         return summary
+        
     except Exception as e:
-        logger.error(f"Error generating metrics summary: {e}")
+        log_exception(e, operation="Metrics summary generation")
         return {
             "error": "Could not generate metrics summary",
-            "detail": str(e)
+            "detail": str(e),
+            "timestamp": datetime.utcnow().isoformat() + "Z"
         }
+
+@app.post("/metrics/reset", tags=["Monitoring"])
+async def reset_metrics():
+    """
+    Reset performance metrics (admin endpoint)
+    
+    Returns:
+        dict: Confirmation of metrics reset
+    """
+    global signal_generation_metrics
+    
+    old_metrics = signal_generation_metrics.copy()
+    
+    signal_generation_metrics = {
+        "total_requests": 0,
+        "successful_requests": 0,
+        "failed_requests": 0,
+        "average_response_time": 0.0,
+        "last_reset": datetime.utcnow()
+    }
+    
+    logger.info("Performance metrics reset", old_metrics=old_metrics)
+    
+    return {
+        "message": "Metrics reset successfully",
+        "previous_metrics": old_metrics,
+        "reset_time": signal_generation_metrics["last_reset"].isoformat() + "Z"
+    }
 
 @app.get("/cryptos/list", tags=["Configuration"])
 def get_crypto_list():
@@ -519,7 +660,7 @@ async def run_backtest(request: Request, symbol: str = "BTCUSDT", days: int = DE
 @limiter.limit(RATE_LIMIT_SIGNAL)
 async def get_signal(request: Request, data: RequestData):
     """
-    Get trading signal for a single cryptocurrency
+    Get trading signal for a single cryptocurrency with enhanced monitoring
     
     Args:
         data: RequestData with symbol and timeframe
@@ -535,21 +676,51 @@ async def get_signal(request: Request, data: RequestData):
         }
         ```
     """
+    start_time = time.time()
+    signal_generation_metrics["total_requests"] += 1
+    
     try:
-        signal_data = generate_signal(data.symbol, data.timeframe)
-        
-        if "error" not in signal_data:
-            save_signal(signal_data)
-        
-        return signal_data
+        with performance_log("signal_generation", symbol=data.symbol, timeframe=data.timeframe):
+            signal_data = generate_signal(data.symbol, data.timeframe)
+            
+            # Log API call
+            duration_ms = (time.time() - start_time) * 1000
+            log_api_call("POST", "/get-signal", 200, duration_ms, symbol=data.symbol)
+            
+            # Update metrics
+            signal_generation_metrics["successful_requests"] += 1
+            signal_generation_metrics["average_response_time"] = (
+                (signal_generation_metrics["average_response_time"] * 
+                 (signal_generation_metrics["successful_requests"] - 1) + duration_ms) /
+                signal_generation_metrics["successful_requests"]
+            )
+            
+            # Performance warning if too slow
+            if duration_ms > 5000:
+                logger.warning(
+                    f"Slow signal generation: {duration_ms:.2f}ms for {data.symbol}",
+                    duration_ms=duration_ms,
+                    symbol=data.symbol,
+                    timeframe=data.timeframe
+                )
+            
+            if "error" not in signal_data:
+                save_signal(signal_data)
+            
+            return signal_data
+            
     except Exception as e:
+        signal_generation_metrics["failed_requests"] += 1
+        duration_ms = (time.time() - start_time) * 1000
+        log_api_call("POST", "/get-signal", 500, duration_ms, symbol=data.symbol, error=str(e))
+        log_exception(e, {"symbol": data.symbol, "timeframe": data.timeframe}, "Signal generation")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/signals/multi", tags=["Signals"])
 @limiter.limit(RATE_LIMIT_MULTI_SIGNAL)
 async def get_multi_signals(request: Request, data: MultiRequestData):
     """
-    Get signals for multiple cryptocurrencies
+    Get signals for multiple cryptocurrencies with enhanced error handling
     
     Args:
         data: MultiRequestData with list of symbols and timeframe
@@ -557,15 +728,49 @@ async def get_multi_signals(request: Request, data: MultiRequestData):
     Returns:
         dict: List of signals for each cryptocurrency
     """
+    start_time = time.time()
+    
     try:
-        results = []
-        for symbol in data.symbols:
-            signal_data = generate_signal(symbol, data.timeframe)
-            if "error" not in signal_data:
-                save_signal(signal_data)
-            results.append(signal_data)
-        return {"signals": results}
+        with performance_log("multi_signal_generation", symbols=data.symbols, timeframe=data.timeframe):
+            results = []
+            successful_signals = 0
+            failed_signals = 0
+            
+            for symbol in data.symbols:
+                try:
+                    signal_data = generate_signal(symbol, data.timeframe)
+                    if "error" not in signal_data:
+                        save_signal(signal_data)
+                        successful_signals += 1
+                    else:
+                        failed_signals += 1
+                    results.append(signal_data)
+                except Exception as e:
+                    failed_signals += 1
+                    logger.error(f"Failed to generate signal for {symbol}: {e}")
+                    results.append({"symbol": symbol, "error": str(e)})
+            
+            duration_ms = (time.time() - start_time) * 1000
+            log_api_call(
+                "POST", "/signals/multi", 200, duration_ms,
+                symbols_count=len(data.symbols),
+                successful=successful_signals,
+                failed=failed_signals
+            )
+            
+            return {
+                "signals": results,
+                "summary": {
+                    "total": len(data.symbols),
+                    "successful": successful_signals,
+                    "failed": failed_signals
+                }
+            }
+            
     except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        log_api_call("POST", "/signals/multi", 500, duration_ms, error=str(e))
+        log_exception(e, {"symbols": data.symbols, "timeframe": data.timeframe}, "Multi-signal generation")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/signals/history", tags=["Signals"])

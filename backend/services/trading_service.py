@@ -103,9 +103,14 @@ class TradingService:
                 if "error" in signal_data:
                     continue
                 
-                current_price = signal_data.get("current_price", 0)
+                current_price = signal_data.get("price", 0)
                 signal = signal_data.get("signal", "NEUTRAL")
                 confidence = signal_data.get("confidence", 0)
+                
+                # Skip processing if price is invalid
+                if current_price <= 0:
+                    logger.warning(f"Invalid or missing price for {symbol}: {current_price}")
+                    continue
                 
                 # Find existing position
                 position = next((p for p in positions if p.symbol == symbol.strip()), None)
@@ -113,13 +118,20 @@ class TradingService:
                 # Update position price if exists
                 if position:
                     position.current_price = current_price
-                    position.pnl = (current_price - position.average_price) * position.quantity
+                    
+                    # Calculate PnL with safety checks
+                    if position.average_price > 0 and position.quantity > 0:
+                        position.pnl = (current_price - position.average_price) * position.quantity
+                    else:
+                        position.pnl = 0.0
                     
                     # Update trailing stop if enabled
-                    if session.strategy_trailing_stop and position.pnl > 0:
-                        trailing_stop_price = current_price * (1 - session.strategy_stop_loss)
-                        if not position.trailing_stop_price or trailing_stop_price > position.trailing_stop_price:
-                            position.trailing_stop_price = trailing_stop_price
+                    if session.strategy_trailing_stop and position.pnl > 0 and current_price > 0:
+                        # Ensure stop loss percentage is valid
+                        if 0 < session.strategy_stop_loss < 1:
+                            trailing_stop_price = current_price * (1 - session.strategy_stop_loss)
+                            if not position.trailing_stop_price or trailing_stop_price > position.trailing_stop_price:
+                                position.trailing_stop_price = trailing_stop_price
                     
                     # Check stop-loss
                     effective_stop = position.trailing_stop_price or position.stop_loss
@@ -155,13 +167,27 @@ class TradingService:
         from database import SessionPosition, SessionTrade
         
         risk_amount = session.current_balance * session.strategy_risk_per_trade
+        
+        # Prevent division by zero
+        if price <= 0:
+            logger.warning(f"Invalid price for {symbol}: {price}")
+            return
+            
         quantity = risk_amount / price
         cost = quantity * price
         
         if cost > session.current_balance:
             return
         
-        # Calculate stop-loss and take-profit
+        # Calculate stop-loss and take-profit with safety checks
+        if price <= 0:
+            logger.warning(f"Invalid price for stop/take profit calculation: {price}")
+            return
+            
+        if not (0 < session.strategy_stop_loss < 1) or not (0 < session.strategy_take_profit < 10):
+            logger.warning(f"Invalid strategy parameters: stop_loss={session.strategy_stop_loss}, take_profit={session.strategy_take_profit}")
+            return
+            
         stop_loss = price * (1 - session.strategy_stop_loss)
         take_profit = price * (1 + session.strategy_take_profit)
         

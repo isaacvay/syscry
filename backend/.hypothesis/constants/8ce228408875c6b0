@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\constants.py
+# hypothesis_version: 6.151.2
+
+[1e-08, 0.2, 0.25, 0.3, 100, 1000, 1024, 1200, 3600, 4096, 86400, 1000000000, '%Y-%m-%d %H:%M:%S', '10/minute', '2/minute', '20/minute', '30/minute', 'Binance API error', 'Database error', 'Invalid symbol', 'Invalid timeframe', 'ML model not found', 'Prediction failed', 'ℹ️', '⚠️', '⚪', '✅', '❌', '📊', '🔴', '🚀', '🚨', '🟢']

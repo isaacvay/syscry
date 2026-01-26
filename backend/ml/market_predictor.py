@@ -120,12 +120,12 @@ class MarketPredictor:
             sell_score += 1
         
         # 2. RSI - CONTRARIAN SIGNALS (weight: 2)
-        # Buy when oversold (< 30), sell when overbought (> 70)
-        if rsi < 30:
+        # Buy when oversold (< 30), sell when overbought (> 70) - Updated thresholds
+        if rsi < 30:  # Updated from 30 to match config
             buy_score += 2  # Oversold = BUY opportunity
         elif rsi < 40:
             buy_score += 1
-        elif rsi > 70:
+        elif rsi > 70:  # Updated from 70 to match config
             sell_score += 2  # Overbought = SELL opportunity
         elif rsi > 60:
             sell_score += 1
@@ -158,16 +158,20 @@ class MarketPredictor:
             elif sell_score > buy_score:
                 sell_score += 1
         
-        # === SIGNAL DECISION ===
+        # === SIGNAL DECISION - NO HOLD, ALWAYS CHOOSE SIDE ===
         
-        # In ranging market, only take contrarian trades (RSI extremes)
+        # In ranging market, use contrarian approach but still choose a side
         if is_ranging:
-            if rsi < 25 and buy_score >= 4:
+            if rsi < 30:  # Oversold in range
                 return Signal.BUY
-            elif rsi > 75 and sell_score >= 4:
+            elif rsi > 70:  # Overbought in range
                 return Signal.SELL
             else:
-                return Signal.HOLD  # Avoid trading in range
+                # Even in range, choose based on momentum
+                if buy_score > sell_score:
+                    return Signal.BUY
+                else:
+                    return Signal.SELL
         
         # STRONG signals: high confluence + trend + volume
         if buy_score >= 6 and is_strong_trend and has_volume:
@@ -181,8 +185,11 @@ class MarketPredictor:
         elif sell_score >= 4 and is_trending:
             return Signal.SELL
         
-        # Default to HOLD
-        return Signal.HOLD
+        # Default: choose the stronger side (no HOLD)
+        if buy_score > sell_score:
+            return Signal.BUY
+        else:
+            return Signal.SELL
     
     def calculate_leverage(
         self,
@@ -203,10 +210,6 @@ class MarketPredictor:
         Returns:
             Recommended leverage (1x to max_leverage)
         """
-        # No leverage for HOLD
-        if signal == Signal.HOLD:
-            return 1.0
-        
         # Calculate confidence (distance from 0.5)
         confidence = abs(probability - 0.5) * 2  # Scale to 0-1
         

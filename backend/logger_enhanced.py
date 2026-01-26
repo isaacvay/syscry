@@ -7,6 +7,8 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime
 import json
+import traceback
+from typing import Dict, Any, Optional
 
 
 class JSONFormatter(logging.Formatter):
@@ -27,12 +29,21 @@ class JSONFormatter(logging.Formatter):
         # Add exception info if present
         if record.exc_info:
             log_data['exception'] = self.formatException(record.exc_info)
+            log_data['stack_trace'] = traceback.format_exception(*record.exc_info)
         
         # Add extra fields
         if hasattr(record, 'extra_fields'):
             log_data.update(record.extra_fields)
         
-        return json.dumps(log_data)
+        # Add performance metrics if present
+        if hasattr(record, 'duration'):
+            log_data['duration_ms'] = record.duration
+        
+        # Add error context if present
+        if hasattr(record, 'error_context'):
+            log_data['error_context'] = record.error_context
+        
+        return json.dumps(log_data, default=str)
 
 
 class ColoredFormatter(logging.Formatter):
@@ -52,6 +63,31 @@ class ColoredFormatter(logging.Formatter):
         color = self.COLORS.get(record.levelname, self.RESET)
         record.levelname = f"{color}{record.levelname}{self.RESET}"
         return super().format(record)
+
+
+class PerformanceLogger:
+    """
+    Context manager for performance logging
+    """
+    
+    def __init__(self, logger: logging.Logger, operation: str, **context):
+        self.logger = logger
+        self.operation = operation
+        self.context = context
+        self.start_time = None
+    
+    def __enter__(self):
+        self.start_time = datetime.utcnow()
+        self.logger.debug(f"Starting {self.operation}", **self.context)
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        duration = (datetime.utcnow() - self.start_time).total_seconds() * 1000
+        
+        if exc_type is None:
+            self.logger.info(f"Completed {self.operation} in {duration:.2f}ms")
+        else:
+            self.logger.error(f"Failed {self.operation} in {duration:.2f}ms: {exc_val}")
 
 
 def setup_logger(
@@ -99,7 +135,7 @@ def setup_logger(
         file_handler.setFormatter(JSONFormatter())
     else:
         file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
         ))
     
     logger.addHandler(file_handler)
@@ -107,7 +143,7 @@ def setup_logger(
     # Console handler with colors
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(ColoredFormatter(
-        '%(asctime)s - %(levelname)s - %(message)s',
+        '%(asctime)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
         datefmt='%H:%M:%S'
     ))
     logger.addHandler(console_handler)
@@ -141,6 +177,84 @@ def log_with_context(level: str, message: str, **context):
     logger.handle(record)
 
 
+def log_exception(exception: Exception, context: Optional[Dict[str, Any]] = None, 
+                 operation: Optional[str] = None):
+    """
+    Log exception with full context and stack trace
+    
+    Args:
+        exception: Exception to log
+        context: Additional context
+        operation: Operation that failed
+    """
+    error_context = {
+        "exception_type": type(exception).__name__,
+        "exception_message": str(exception),
+    }
+    
+    if context:
+        error_context.update(context)
+    
+    if hasattr(exception, 'to_dict'):
+        error_context.update(exception.to_dict())
+    
+    message = f"Exception in {operation}: {exception}" if operation else f"Exception: {exception}"
+    
+    logger.exception(message)
+
+
+def log_performance_warning(operation: str, duration_ms: float, threshold_ms: float = 5000, **context):
+    """
+    Log performance warning if operation exceeds threshold
+    
+    Args:
+        operation: Operation name
+        duration_ms: Duration in milliseconds
+        threshold_ms: Warning threshold in milliseconds
+        **context: Additional context
+    """
+    if duration_ms > threshold_ms:
+        logger.warning(
+            f"Performance warning: {operation} took {duration_ms:.2f}ms (threshold: {threshold_ms}ms)"
+        )
+
+
+def log_api_call(method: str, url: str, status_code: Optional[int] = None, 
+                duration_ms: Optional[float] = None, **context):
+    """
+    Log API call with standardized format
+    
+    Args:
+        method: HTTP method
+        url: API URL
+        status_code: Response status code
+        duration_ms: Request duration
+        **context: Additional context
+    """
+    message = f"{method} {url}"
+    
+    log_context = {
+        "api_method": method,
+        "api_url": url,
+        **context
+    }
+    
+    if status_code:
+        message += f" -> {status_code}"
+        log_context["status_code"] = status_code
+    
+    if duration_ms:
+        message += f" ({duration_ms:.2f}ms)"
+        log_context["duration_ms"] = duration_ms
+    
+    if status_code and status_code >= 400:
+        logger.error(message)
+    elif duration_ms and duration_ms > 5000:
+        logger.warning(message)
+    else:
+        logger.info(message)
+
+
 # Convenience functions
 def debug(message: str, **context):
     """Log debug message with context"""
@@ -165,3 +279,16 @@ def error(message: str, **context):
 def critical(message: str, **context):
     """Log critical message with context"""
     log_with_context('CRITICAL', message, **context)
+
+
+# Performance logging context manager
+def performance_log(operation: str, **context):
+    """
+    Context manager for performance logging
+    
+    Usage:
+        with performance_log("signal_generation", symbol="BTCUSDT"):
+            # Your code here
+            pass
+    """
+    return PerformanceLogger(logger, operation, **context)

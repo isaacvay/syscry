@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\ml\features.py
+# hypothesis_version: 6.151.2
+
+[1e-10, 0.001, 0.1, 0.5, 0.6, 100, 'adx', 'adx_neg', 'adx_pos', 'aroon_diff', 'aroon_down', 'aroon_up', 'atr', 'atr_ratio', 'bb_high', 'bb_low', 'bb_position', 'bb_width', 'bearish_engulfing', 'body_range_ratio', 'bullish_engulfing', 'close', 'ema20', 'ema50', 'ema_cross', 'ema_distance', 'gk_vol', 'high', 'hl_spread', 'is_doji', 'is_hammer', 'log_returns', 'low', 'lower_shadow', 'macd', 'momentum_1h', 'momentum_24h', 'momentum_4h', 'open', 'parkinson_vol', 'price_to_ema20', 'price_to_ema50', 'price_to_vwap', 'returns', 'rsi', 'rsi_24', 'rsi_6', 'rsi_momentum', 'stoch_d', 'stoch_k', 'target', 'timestamp', 'upper_shadow', 'volatility_10', 'volatility_20', 'volatility_50', 'volume', 'volume_change', 'volume_delta', 'volume_delta_ma', 'volume_ma_ratio', 'volume_momentum', 'vwap']

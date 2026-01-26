@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\exceptions.py
+# hypothesis_version: 6.151.2
+
+['BINANCE_API_ERROR', 'CIRCUIT_BREAKER_OPEN', 'CLOSED', 'CONFIGURATION_ERROR', 'DATA_QUALITY_ERROR', 'HALF_OPEN', 'INSUFFICIENT_DATA', 'MODEL_NOT_FOUND', 'OPEN', 'PREDICTION_ERROR', 'VALIDATION_ERROR', 'attempt', 'constraint', 'context', 'error_code', 'error_type', 'expected_type', 'failure_count', 'field', 'message', 'model_path', 'original_error', 'parameter', 'prediction_type', 'quality_issues', 'received', 'received_value', 'required', 'service', 'status_code', 'symbol', 'timeframe', 'timestamp', 'unknown', 'value']

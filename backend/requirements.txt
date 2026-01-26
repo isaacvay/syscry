@@ -24,9 +24,16 @@ optuna
 lightgbm
 catboost
 
-# Sentiment Analysis
+# Sentiment Analysis (Optional)
 tweepy
 praw
 newsapi-python
 textblob
 vaderSentiment
+
+# Property-Based Testing
+hypothesis
+
+# Enhanced Logging and Monitoring
+structlog
+colorlog

@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\ml\sentiment_analyzer.py
+# hypothesis_version: 6.151.2
+
+[-0.1, 0.0, 0.1, 0.3, 0.33, 0.4, 100, 3600, '%Y-%m-%d', 'Bitcoin', 'CryptoMarkets', 'aggregated_sentiment', 'articles', 'avg_sentiment', 'body', 'cache_ttl', 'combined_score', 'compound', 'count', 'created_at', 'cryptocurrency', 'en', 'neg', 'negative_ratio', 'neu', 'neutral_ratio', 'news', 'news_api_key', 'pos', 'positive_ratio', 'public_metrics', 'reddit', 'reddit_client_id', 'reddit_client_secret', 'reddit_user_agent', 'relevancy', 'sentiment_std', 'source', 'source_count', 'sources', 'symbol', 'textblob_polarity', 'timestamp', 'twitter', 'twitter_bearer_token', 'vader_compound', 'vader_negative', 'vader_neutral', 'vader_positive']

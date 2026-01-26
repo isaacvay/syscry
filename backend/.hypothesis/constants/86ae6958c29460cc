@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\indicators\signals.py
+# hypothesis_version: 6.151.2
+
+[1e-08, 0.4, 0.6, 1000, 1000000000, '/', '1h', 'BTCUSDT', 'BUY', 'BUY (Trend)', 'Binance API', 'Binance API error', 'Could not fetch data', 'NEUTRE', 'SELL', 'SELL (Trend)', 'adx', 'aggregated_sentiment', 'atr', 'bfill', 'cache_ttl', 'chart_data', 'close', 'coerce', 'confidence', 'ema20', 'ema50', 'error', 'ffill', 'high', 'indicators', 'invalid_close_prices', 'invalid_volume', 'leverage', 'low', 'macd', 'news_api_key', 'null_values', 'ohlc_logic_errors', 'open', 'position_size', 'price', 'probability', 'quantity', 'reddit_client_id', 'reddit_client_secret', 'risk_reward_ratio', 'rsi', 'sentiment', 'signal', 'stoch_d', 'stoch_k', 'stop_loss', 'symbol', 'take_profit', 'time', 'timeframe', 'timestamp', 'twitter_bearer_token', 'volume']

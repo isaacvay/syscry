@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\config.py
+# hypothesis_version: 6.151.2
+
+[0.01, 0.02, 0.1, 0.2, 0.52, 0.55, 1.0, 3.0, 10.0, 10000.0, 100, 3600, '.env', '15m', '1d', '1h', '1w', '4h', 'ADAUSDT', 'AVAXUSDT', 'BACKEND_API_URL', 'BNBUSDT', 'BTCUSDT', 'DOGEUSDT', 'DOTUSDT', 'ETHUSDT', 'FRONTEND_URL', 'LINKUSDT', 'MATICUSDT', 'NEWS_API_KEY', 'REDDIT_CLIENT_ID', 'REDDIT_CLIENT_SECRET', 'REDDIT_USER_AGENT', 'SHIBUSDT', 'SOLUSDT', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', 'TWITTER_BEARER_TOKEN', 'XRPUSDT', 'catboost', 'iqr', 'lightgbm', 'performance', 'random', 'random_forest', 'robust', 'utf-8', 'voting', 'xgboost']

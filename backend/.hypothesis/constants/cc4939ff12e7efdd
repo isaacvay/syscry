@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\services\signal_service.py
+# hypothesis_version: 6.151.2
+
+[0.0, 0.02, 0.5, 0.6, 25.0, 50.0, 1000, '/', 'BUY', 'Could not fetch data', 'HOLD', 'SELL', 'adx', 'atr', 'bfill', 'chart_data', 'close', 'confidence', 'dependency_status', 'ema20', 'ema50', 'error', 'ffill', 'high', 'indicators', 'low', 'macd', 'ml_available', 'ml_prediction', 'open', 'price', 'probability', 'rsi', 'sentiment', 'sentiment_analysis', 'sentiment_available', 'sentiment_score', 'signal', 'stoch_d', 'stoch_k', 'symbol', 'textblob', 'time', 'timeframe', 'timestamp']

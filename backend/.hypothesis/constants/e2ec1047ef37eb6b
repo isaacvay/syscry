@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\model\predict.py
+# hypothesis_version: 6.151.2
+
+[-0.03, 0.0, 0.02, 0.03, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.65, 1.0, 1.2, 10000.0, '1h', 'BTCUSDT', 'Fallback heuristic', 'ML prediction', 'Prediction direction', 'Single model loading', 'adx', 'atr', 'close', 'ema20', 'ensemble', 'feature_names', 'interval', 'macd', 'max_leverage', 'min_confidence', 'min_leverage', 'ml', 'ml_prediction', 'model', 'model_loading', 'model_path', 'models', 'probability', 'risk_per_trade', 'rsi', 'single', 'stoch_k', 'symbol', 'target', 'volatility', 'volume', 'volume_ratio', 'voting_ensemble']

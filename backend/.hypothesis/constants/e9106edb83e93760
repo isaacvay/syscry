@@ -1,0 +1,4 @@
+# file: D:\deep\syscry\backend\logger_enhanced.py
+# hypothesis_version: 6.151.2
+
+[400, 1000, 1024, 5000, '\x1b[0m', '\x1b[31m', '\x1b[32m', '\x1b[33m', '\x1b[35m', '\x1b[36m', '%H:%M:%S', '(unknown file)', 'CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING', 'Z', 'api_method', 'api_url', 'crypto_ai', 'duration', 'duration_ms', 'error_context', 'exception', 'exception_message', 'exception_type', 'extra_fields', 'function', 'level', 'line', 'logger', 'logs/app.log', 'message', 'module', 'stack_trace', 'status_code', 'timestamp', 'to_dict', 'utf-8']
